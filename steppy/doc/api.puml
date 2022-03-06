@@ -1,0 +1,75 @@
+@startuml
+!include style.iuml
+
+package api {
+
+class @Concurrency {
+    value(): Type
+}
+
+interface Step<I,R,C> {
+    + execute(Context<C>,I): R
+}
+
+class @DependsOn {
+ + value(): String[]
+}
+
+class @Before {
+ + value(): Phase
+}
+
+class @After{
+ + value(): Phase
+}
+
+enum Concurrency {
+    BLOCK
+    ALLOW
+}
+
+class @State {
+    global: boolean
+    name: String
+}
+
+interface Context<C> {
+    getStepIdentifier(): StepIdentifier
+    getState(): State
+    getConfig(): C
+    abort()
+}
+
+class ExecutionState {
+    + setState(step, name, value)
+    + getState(step, name)
+}
+
+class StateVar<T> {
+    set(Parameter, T)
+    get(Parameter): T
+    setIfNull(Parameter, T)
+}
+
+
+interface FlowBuilder {
+    append(String) : FlowBuilder
+    append(String, Consumer<StepConfigurator>) : FlowBuilder
+    'verkompliziert verifikation (insb. bei depends on):
+    nest(Consumer<NestedFlowBuilder>): FlowBuilder
+    nest(Predicate<?>, Consumer<NestedFlowBuilder>): FlowBuilder
+    withParallelization(): FlowBuilder
+    repeatUntil(Predicate<State>, int)
+    ' gibt schon mechanismen dafür:
+    schedule(...)
+    withExtension
+    build(String): Flow
+}
+
+interface FlowBuilderFactory {
+     create(): FlowBuilder
+}
+
+}
+
+@enduml

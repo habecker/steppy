@@ -1,0 +1,24 @@
+@startuml
+!include style.iuml
+
+class RuntimeStepProxy {
+    - delegate: Step
+}
+interface Flow
+
+abstract class FlowProxy extends Flow {
+    ~ steps: Step...
+    ~ callBefore()
+    ~ callBefore(Step)
+    ~ callAfter()
+    ~ callAfter(Step)
+
+    + verify()
+}
+
+class SerialFlowProxy extends RuntimeFlowProxy
+
+class ConcurrentFlowProxy extends RuntimeFlowProxy
+
+
+@enduml

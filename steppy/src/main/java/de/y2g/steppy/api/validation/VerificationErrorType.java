@@ -1,0 +1,9 @@
+package de.y2g.steppy.api.validation;
+
+public enum VerificationErrorType {
+    STEP_INPUT_TYPE_INCOMPATIBLE,
+    FLOW_INPUT_TYPE_INCOMPATIBLE,
+    FLOW_RETURN_TYPE_INCOMPATIBLE,
+    CONFIGURATION_TYPE_INCOMPATIBLE,
+    DEPENDENCIES_UNFULFILLED;
+}
