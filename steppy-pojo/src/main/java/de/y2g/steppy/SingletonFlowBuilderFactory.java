@@ -1,9 +1,7 @@
 package de.y2g.steppy;
 
 import de.y2g.steppy.api.FlowBuilder;
-import de.y2g.steppy.api.Result;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 public class SingletonFlowBuilderFactory {
@@ -30,8 +28,7 @@ public class SingletonFlowBuilderFactory {
         return instance().builder(configType, Void.class, Void.class);
     }
 
-    private static class PojoFlowBuilderFactory  implements de.y2g.steppy.api.FlowBuilderFactory
-    {
+    private static class PojoFlowBuilderFactory implements de.y2g.steppy.api.FlowBuilderFactory {
         private final ExecutorService executorService;
 
         private PojoFlowBuilderFactory(ExecutorService executorService) {

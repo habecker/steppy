@@ -1,7 +1,5 @@
 package de.y2g.steppy.api;
 
-import java.util.concurrent.Future;
-
 public class Result<R> {
     R result;
     Type type;
@@ -36,6 +34,6 @@ public class Result<R> {
     public enum Type {
         SUCCEEDED,
         ABORTED,
-        FAILED;
+        FAILED
     }
 }

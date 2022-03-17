@@ -12,13 +12,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C,I,R> {
+public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
 
     public SerialFlowProxy(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps) {
         super(typing, steps);
@@ -57,13 +56,10 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
             while (source.isActive()) {
                 try {
                     // TODO make this configurable
-                    if(!source.next(Duration.ofSeconds(1), input -> {
-                        try
-                        {
+                    if (!source.next(Duration.ofSeconds(1), input -> {
+                        try {
                             sink.accept(invokeSingleItem(context, input));
-                        }
-                        catch( ExecutionException e )
-                        {
+                        } catch (ExecutionException e) {
                             sink.accept(new Result<R>(Result.Type.FAILED, e));
                         }
                     })) {

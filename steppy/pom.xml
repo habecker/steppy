@@ -7,11 +7,11 @@
     <groupId>de.y2g</groupId>
     <artifactId>steppy</artifactId>
     <version>1.0-SNAPSHOT</version>
- 
- 
+
+
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
     <dependencies>
         <dependency>

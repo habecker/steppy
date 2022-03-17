@@ -23,9 +23,9 @@ public class SingletonStepRepository extends de.y2g.steppy.api.StepRepository {
 
     @Override
     protected Step create(String name) {
-        if (!this.steps.containsKey(name)) {
+        if (!steps.containsKey(name)) {
             throw new IllegalArgumentException(String.format("Step with name %s was not found in the repository.", name));
         }
-        return this.steps.get(name);
+        return steps.get(name);
     }
 }

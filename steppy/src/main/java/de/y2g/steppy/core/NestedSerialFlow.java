@@ -7,14 +7,11 @@ import de.y2g.steppy.api.streaming.Source;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static de.y2g.steppy.api.Result.Type.SUCCEEDED;
 
 public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, Object, Void> {
     private final Typing<C, I, Void> stepTyping;
@@ -53,19 +50,15 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
     public Void execute(Context<C> context, Object input) throws ExecutionException {
         Logger logger = Logger.getLogger(String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
 
-        if (input instanceof Source)
-        {
+        if (input instanceof Source) {
             var source = (Source<I>) input;
             while (source.isActive()) {
                 try {
                     // TODO make this configurable
-                    if(!source.next(Duration.ofSeconds(1), in -> {
-                        try
-                        {
+                    if (!source.next(Duration.ofSeconds(1), in -> {
+                        try {
                             invokeSingleItem(context, in);
-                        }
-                        catch( ExecutionException e )
-                        {
+                        } catch (ExecutionException e) {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
                             source.close();
                         }
@@ -81,25 +74,21 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                 }
             }
         } else {
-            Result<R> data = invokeSingleItem(context, (I)input);
+            Result<R> data = invokeSingleItem(context, (I) input);
 
-            switch (data.getType())
-            {
-                case SUCCEEDED -> {
+            switch (data.getType()) {
+                case SUCCEEDED:
                     return null;
-                }
-                case ABORTED -> {
+                case ABORTED:
                     context.abort();
-                }
-                case FAILED -> {
+                case FAILED:
                     var throwable = data.getException();
                     if (throwable instanceof RuntimeException)
-                        throw (RuntimeException)throwable;
+                        throw (RuntimeException) throwable;
                     else if (throwable instanceof ExecutionException)
                         throw (ExecutionException) throwable;
                     else
                         throw new ExecutionException("Nested flow failed", throwable);
-                }
             }
         }
 
@@ -108,7 +97,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID().toString() + "-nested-flow");
+        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
 
     @Override
