@@ -57,6 +57,7 @@ public abstract class FlowProxy<C,I,R> {
         step.onAfterStep(context);
     }
 
+
     public void verify() throws VerificationException {
         Class<?> configType = typing.getConfigType();
         List<VerificationError> errors = new ArrayList<>();

@@ -2,6 +2,7 @@ package de.y2g.steppy.api;
 
 import de.y2g.steppy.api.validation.VerificationException;
 import de.y2g.steppy.core.ConcurrentFlowProxy;
+import de.y2g.steppy.core.FlowProxy;
 import de.y2g.steppy.core.NestedConcurrentFlow;
 import de.y2g.steppy.core.NestedSerialFlow;
 import de.y2g.steppy.core.RuntimeStepProxy;
@@ -13,7 +14,6 @@ import de.y2g.steppy.core.Typing;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
@@ -23,7 +23,7 @@ public final class FlowBuilder<C,I,R>  {
     private final StepRepository repository;
     private final Class<C> configType;
     private final Class<I> inputType;
-    private final Class<R> returnType;
+    private Class<R> returnType;
     private final List<StepProxy> steps = new LinkedList<>();
     private boolean concurrent = false;
     private BiPredicate<Context<C>, R> repetitionPredicate;
@@ -42,16 +42,24 @@ public final class FlowBuilder<C,I,R>  {
         return this;
     }
 
-    public FlowBuilder<C,I,R> branch(BiPredicate<Context<C>, R> predicate, Consumer<FlowBuilder<C,?,Void>> consumer) {
-        // TODO create BranchedFlow
+    public <T> FlowBuilder<C,I,R> branch(Consumer<BranchBuilder<C,T,?>> consumer) {
+        Class<T> iType = (Class<T>)inputType;
+
+        if (!steps.isEmpty())
+            iType = steps.get(steps.size() - 1).getTyping().getInputType();
+        BranchBuilder<C,T,?> builder = new BranchBuilder<>(executor, repository, configType, iType, Any.class);
+        consumer.accept(builder);
+        steps.add(builder.build());
         return this;
     }
 
+    // TODO: add executor as parameter here
     public FlowBuilder<C,I,R> concurrent() {
         concurrent = true;
         return this;
     }
 
+    // TODO: result handler?
     public FlowBuilder<C,I,R> nest(Consumer<FlowBuilder<C,?,Void>> consumer) {
         FlowBuilder<C,?,Void> nestedBuilder = new FlowBuilder<>(executor, repository, configType, steps.get(steps.size() - 1).getTyping().getReturnType(), Void.class);
         consumer.accept(nestedBuilder);
@@ -80,6 +88,10 @@ public final class FlowBuilder<C,I,R>  {
     }
 
     public Flow<C,I,R> build() throws VerificationException {
+
+        if (returnType.equals(Any.class))
+            returnType = steps.get(steps.size() - 1).getTyping().getReturnType();
+
         Flow<C,I,R> flow;
         if (concurrent){
             flow = new ConcurrentFlowProxy<>(new Typing<>(configType,inputType,returnType), steps, executor);
@@ -100,4 +112,9 @@ public final class FlowBuilder<C,I,R>  {
         }
         return nestedFlow;
     }
+
+    protected FlowProxy<C,I,R> buildBranched() {
+        return new SerialFlowProxy<>(new Typing<>(configType,inputType,returnType), steps);
+    }
+
 }

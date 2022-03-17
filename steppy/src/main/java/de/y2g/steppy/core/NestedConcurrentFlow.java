@@ -112,13 +112,11 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
 
             switch (data.getType())
             {
-                case SUCCEEDED -> {
+                case SUCCEEDED:
                     return null;
-                }
-                case ABORTED -> {
+                case ABORTED:
                     context.abort();
-                }
-                case FAILED -> {
+                case FAILED:
                     var throwable = data.getException();
                     if (throwable instanceof RuntimeException)
                         throw (RuntimeException)throwable;
@@ -126,7 +124,6 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
                         throw (ExecutionException) throwable;
                     else
                         throw new ExecutionException("Nested flow failed", throwable);
-                }
             }
         }
 

@@ -13,9 +13,7 @@
         <module>steppy</module>
         <module>steppy-spring</module>
         <module>steppy-pojo</module>
-        <module>steppy-cdi</module>
         <module>steppy-plantuml</module>
         <module>processor</module>
-        <module>processor-cdi</module>
     </modules>
 </project>

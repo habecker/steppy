@@ -3,7 +3,9 @@ package de.y2g.processor;
 import de.y2g.processor.example.IntegerProducerStep;
 import de.y2g.processor.example.IntegerSourceStep;
 import de.y2g.processor.example.ProcessImagesStep;
+import de.y2g.processor.example.ScreamStep;
 import de.y2g.processor.example.UploadImageStep;
+import de.y2g.processor.example.WhisperStep;
 import de.y2g.steppy.SingletonFlowBuilderFactory;
 import de.y2g.steppy.SingletonStepRepository;
 import de.y2g.steppy.api.Flow;
@@ -26,13 +28,17 @@ public class PojoTest {
         SingletonStepRepository.register(UploadImageStep.name, new UploadImageStep());
         SingletonStepRepository.register(IntegerSourceStep.name, new IntegerSourceStep());
         SingletonStepRepository.register(IntegerProducerStep.name, new IntegerProducerStep());
+        SingletonStepRepository.register(ScreamStep.name, new ScreamStep());
+        SingletonStepRepository.register(WhisperStep.name, new WhisperStep());
 
         var flow = SingletonFlowBuilderFactory.builder(Void.class)
                 .append(IntegerSourceStep.name)
                 .nest(builder -> builder
-                        .append(ProcessImagesStep.name)
-                        .append(ProcessImagesStep.name)
-                        .append(IntegerProducerStep.name)
+                        .branch(builder1 -> {
+                            builder1.
+                                    when((c,i) -> (Integer)i >= 20, builder2 -> builder2.append(ScreamStep.name)).
+                                    otherwise(builder2 -> builder2.append(WhisperStep.name));
+                        })
                         .concurrent()
                 )
                 .build();
