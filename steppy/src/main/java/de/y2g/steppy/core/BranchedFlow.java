@@ -1,14 +1,13 @@
 package de.y2g.steppy.core;
 
 import de.y2g.steppy.api.Context;
-import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiPredicate;
+
 // TODO: veriy otherwise continue
 public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
     private final Typing<C, I, R> stepTyping;
@@ -24,16 +23,14 @@ public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
 
     @Override
     public void onBeforeFlow(Context<C> context) throws ExecutionException {
-        for (var flow: flows)
-        {
+        for (var flow : flows) {
             flow.flow.callBefore(context);
         }
     }
 
     @Override
     public void onAfterFlow(Context<C> context) throws ExecutionException {
-        for (var flow: flows)
-        {
+        for (var flow : flows) {
             flow.flow.callAfter(context);
         }
     }
@@ -62,14 +59,14 @@ public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
             flow = flows.stream().filter(f -> f.isElse).findFirst();
 
         if (!flow.isPresent() && otherwiseContinue)
-            return (R)input;
+            return (R) input;
 
         if (!flow.isPresent())
             throw new ExecutionException("No branch found with fulfilled predicate.");
 
         var flowInstance = flow.get().flow;
 
-        return (R) flowInstance.invokeSingleItem(context, (I)input);
+        return (R) flowInstance.invokeSingleItem(context, (I) input);
     }
 
     @Override
@@ -91,6 +88,7 @@ public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
             this.flow = flow;
             this.predicate = predicate;
         }
+
         public PredicatedFlow(FlowProxy<C, I, R> flow) {
             this.flow = flow;
             isElse = true;

@@ -2,8 +2,8 @@ package de.y2g.processor.cdi;
 
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.State;
-import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.Step;
+import de.y2g.steppy.api.Variable;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Named;

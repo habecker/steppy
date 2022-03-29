@@ -6,18 +6,17 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-public class BranchedFlowProxy<C,I,R> extends FlowProxy<C,I,R>
-    {
-        private BiPredicate<Context<C>, I> predicate;
-        private boolean isElse;
+public class BranchedFlowProxy<C, I, R> extends FlowProxy<C, I, R> {
+    private BiPredicate<Context<C>, I> predicate;
+    private boolean isElse;
 
-        protected BranchedFlowProxy(BiPredicate<Context<C>, I> predicate, Typing<C, I, R> typing, @Nonnull List<StepProxy> steps, boolean isElse) {
-            super(typing, steps);
-            this.predicate = predicate;
-            this.isElse = isElse;
-        }
-
-        public BiPredicate<Context<C>, I> getPredicate() {
-            return predicate;
-        }
+    protected BranchedFlowProxy(BiPredicate<Context<C>, I> predicate, Typing<C, I, R> typing, @Nonnull List<StepProxy> steps, boolean isElse) {
+        super(typing, steps);
+        this.predicate = predicate;
+        this.isElse = isElse;
     }
+
+    public BiPredicate<Context<C>, I> getPredicate() {
+        return predicate;
+    }
+}

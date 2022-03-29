@@ -54,7 +54,6 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
     }
 
 
-
     @Override
     public Typing getTyping() {
         return stepTyping;
@@ -64,15 +63,14 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
     public Void execute(Context<C> context, Object input) throws ExecutionException {
         Logger logger = Logger.getLogger(String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
 
-        if (input instanceof Source)
-        {
+        if (input instanceof Source) {
             Phaser executions = new Phaser(0);
             var source = (Source) input;
 
             while (source.isActive()) {
                 try {
                     // TODO make this configurable
-                    if(!source.next(Duration.ofSeconds(1), in -> {
+                    if (!source.next(Duration.ofSeconds(1), in -> {
                         var c = new CompletableFuture<Result<R>>();
                         c.exceptionally(throwable -> {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + throwable.getMessage(), throwable);
@@ -85,13 +83,10 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
                         executions.register();
                         // TODO add timeout for max execution time per item
                         taskExecutor.accept(() -> {
-                            try
-                            {
-                                return invokeSingleItem(context, (I)in);
-                            }
-                            catch( ExecutionException e )
-                            {
-                                logger.log(Level.SEVERE, "Error executing in parallel", e );
+                            try {
+                                return invokeSingleItem(context, (I) in);
+                            } catch (ExecutionException e) {
+                                logger.log(Level.SEVERE, "Error executing in parallel", e);
                                 return new Result<R>(Result.Type.FAILED, e);
                             }
                         }, c);
@@ -108,10 +103,9 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
             }
             executions.arriveAndAwaitAdvance();
         } else {
-            Result<R> data = invokeSingleItem(context, (I)input);
+            Result<R> data = invokeSingleItem(context, (I) input);
 
-            switch (data.getType())
-            {
+            switch (data.getType()) {
                 case SUCCEEDED:
                     return null;
                 case ABORTED:
@@ -119,7 +113,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
                 case FAILED:
                     var throwable = data.getException();
                     if (throwable instanceof RuntimeException)
-                        throw (RuntimeException)throwable;
+                        throw (RuntimeException) throwable;
                     else if (throwable instanceof ExecutionException)
                         throw (ExecutionException) throwable;
                     else

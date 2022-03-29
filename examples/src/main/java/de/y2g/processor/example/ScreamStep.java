@@ -1,13 +1,10 @@
 package de.y2g.processor.example;
 
 import de.y2g.steppy.api.Context;
-import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;
-import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.exception.ExecutionException;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 @Component(ScreamStep.name)

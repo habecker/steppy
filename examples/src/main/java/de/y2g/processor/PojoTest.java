@@ -1,17 +1,9 @@
 package de.y2g.processor;
 
-import de.y2g.processor.example.IntegerProducerStep;
-import de.y2g.processor.example.IntegerSourceStep;
-import de.y2g.processor.example.ProcessImagesStep;
-import de.y2g.processor.example.ScreamStep;
-import de.y2g.processor.example.UploadImageStep;
-import de.y2g.processor.example.WhisperStep;
+import de.y2g.processor.example.*;
 import de.y2g.steppy.SingletonFlowBuilderFactory;
 import de.y2g.steppy.SingletonStepRepository;
-import de.y2g.steppy.api.Flow;
-import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Sink;
 import de.y2g.steppy.api.validation.VerificationException;
 
 import java.util.concurrent.Executors;
@@ -20,6 +12,7 @@ import java.util.logging.Logger;
 
 public class PojoTest {
     private static Logger logger = Logger.getLogger("main");
+
     public static void main(String[] args) throws VerificationException, ExecutionException, InterruptedException {
         var pool = Executors.newFixedThreadPool(8);
         SingletonFlowBuilderFactory.initialize(pool);
@@ -36,7 +29,7 @@ public class PojoTest {
                 .nest(builder -> builder
                         .branch(builder1 -> {
                             builder1.
-                                    when((c,i) -> (Integer)i >= 20, builder2 -> builder2.append(ScreamStep.name)).
+                                    when((c, i) -> (Integer) i >= 20, builder2 -> builder2.append(ScreamStep.name)).
                                     otherwise(builder2 -> builder2.append(WhisperStep.name));
                         })
                         .concurrent()

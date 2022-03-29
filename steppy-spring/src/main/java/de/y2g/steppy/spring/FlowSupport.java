@@ -9,7 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 @ComponentScan
 public class FlowSupport {
-    @Bean(name="flowTaskExecutor")
+    @Bean(name = "flowTaskExecutor")
     public TaskExecutor taskExecutor() {
         // todo: make configurable
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

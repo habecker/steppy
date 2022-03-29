@@ -15,6 +15,6 @@ public class IntegerSourceStep implements Step<Void, Void, Source<Integer>> {
 
     @Override
     public Source<Integer> invoke(Context<Void> context, Void input) {
-        return new IntegerSource(10,11,20,21);
+        return new IntegerSource(10, 11, 20, 21);
     }
 }
