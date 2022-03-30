@@ -15,11 +15,11 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;
 
-import static de.y2g.processor.example.reddit.RedditConnect.REDDIT_CLIENT_STATE;
+import static de.y2g.processor.example.reddit.RedditConnectStep.REDDIT_CLIENT_STATE;
 
-@DependsOn(RedditConnect.NAME)
-@Component(CrawlSubreddit.NAME)
-public class CrawlSubreddit implements Step<CrawlSubreddit.Config, Void, Source<Submission>> {
+@DependsOn(RedditConnectStep.NAME)
+@Component(CrawlSubredditStep.NAME)
+public class CrawlSubredditStep implements Step<CrawlSubredditStep.Config, Void, Source<Submission>> {
     public static final String NAME = "subreddit-crawler";
 
     @State(name = REDDIT_CLIENT_STATE, global = true)

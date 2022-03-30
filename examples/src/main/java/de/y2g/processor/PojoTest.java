@@ -1,10 +1,17 @@
 package de.y2g.processor;
 
+import de.y2g.processor.example.reddit.CrawlSubredditStep;
+import de.y2g.processor.example.reddit.LogSubmissionStep;
+import de.y2g.processor.example.reddit.RedditConnectStep;
+import de.y2g.processor.example.reddit.config.CrawlSubredditConfig;
 import de.y2g.steppy.SingletonFlowBuilderFactory;
+import de.y2g.steppy.SingletonStepRepository;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.VerificationException;
+import net.dean.jraw.models.Submission;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class PojoTest {
@@ -14,27 +21,29 @@ public class PojoTest {
         var pool = Executors.newFixedThreadPool(8);
         SingletonFlowBuilderFactory.initialize(pool);
 
-        /*
-        SingletonStepRepository.register(ProcessImagesStep.name, new ProcessImagesStep());
-        SingletonStepRepository.register(UploadImageStep.name, new UploadImageStep());
-        SingletonStepRepository.register(IntegerSourceStep.name, new IntegerSourceStep());
-        SingletonStepRepository.register(IntegerProducerStep.name, new IntegerProducerStep());
-        SingletonStepRepository.register(ScreamStep.name, new ScreamStep());
-        SingletonStepRepository.register(WhisperStep.name, new WhisperStep());
 
-        var flow = SingletonFlowBuilderFactory.builder(Void.class)
-                .append(IntegerSourceStep.name)
-                .nest(builder -> builder
-                        .branch(builder1 -> {
-                            builder1.
-                                    when((c, i) -> (Integer) i >= 20, builder2 -> builder2.append(ScreamStep.name)).
-                                    otherwise(builder2 -> builder2.append(WhisperStep.name));
-                        })
+        SingletonStepRepository.register(CrawlSubredditStep.NAME, new CrawlSubredditStep());
+        SingletonStepRepository.register(LogSubmissionStep.NAME, new LogSubmissionStep());
+        SingletonStepRepository.register(RedditConnectStep.NAME, new RedditConnectStep());
+
+        var flow = SingletonFlowBuilderFactory.builder(CrawlSubredditConfig.class)
+                .append(RedditConnectStep.NAME)
+                .append(CrawlSubredditStep.NAME)
+                .nest(nestedBuilder -> nestedBuilder
+                        .branch(branchBuilder -> branchBuilder
+                                .when((context, submission) -> !((Submission) submission).isNsfw(),
+                                        builder1 -> builder1.append(LogSubmissionStep.NAME))
+                                .otherwiseContinue()
+                        )
                         .concurrent()
                 )
                 .build();
 
-        flow.invoke(null);
+        String user = System.getProperty("user");
+        String password = System.getProperty("password");
+        String subreddit = System.getProperty("subreddit");
+
+        flow.invoke(new CrawlSubredditConfig(user, password, subreddit, 100));
 
         pool.shutdown();
         try {
@@ -42,7 +51,6 @@ public class PojoTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        */
     }
 
 }

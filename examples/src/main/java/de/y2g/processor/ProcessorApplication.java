@@ -1,8 +1,8 @@
 package de.y2g.processor;
 
-import de.y2g.processor.example.reddit.CrawlSubreddit;
-import de.y2g.processor.example.reddit.LogSubmission;
-import de.y2g.processor.example.reddit.RedditConnect;
+import de.y2g.processor.example.reddit.CrawlSubredditStep;
+import de.y2g.processor.example.reddit.LogSubmissionStep;
+import de.y2g.processor.example.reddit.RedditConnectStep;
 import de.y2g.processor.example.reddit.config.CrawlSubredditConfig;
 import de.y2g.steppy.api.Flow;
 import de.y2g.steppy.api.validation.VerificationException;
@@ -27,12 +27,12 @@ public class ProcessorApplication {
     public Flow<CrawlSubredditConfig, Void, Void> redditFlow(SpringFlowBuilderFactory flowBuilderFactory) throws VerificationException {
         return flowBuilderFactory
                 .builder(CrawlSubredditConfig.class, Void.class, Void.class)
-                .append(RedditConnect.NAME)
-                .append(CrawlSubreddit.NAME)
+                .append(RedditConnectStep.NAME)
+                .append(CrawlSubredditStep.NAME)
                 .nest(nestedBuilder -> nestedBuilder
                         .branch(branchBuilder -> branchBuilder
                                 .when((context, submission) -> !((Submission) submission).isNsfw(),
-                                        builder1 -> builder1.append(LogSubmission.NAME))
+                                        builder1 -> builder1.append(LogSubmissionStep.NAME))
                                 .otherwiseContinue()
                         )
                         .concurrent()

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.logging.Logger;
 
-@Component(LogSubmission.NAME)
-public class LogSubmission implements Step<Object, Submission, Void> {
-    private static final Logger logger = Logger.getLogger(LogSubmission.NAME);
+@Component(LogSubmissionStep.NAME)
+public class LogSubmissionStep implements Step<Object, Submission, Void> {
+    private static final Logger logger = Logger.getLogger(LogSubmissionStep.NAME);
 
     public static final String NAME = "log-submission";
 

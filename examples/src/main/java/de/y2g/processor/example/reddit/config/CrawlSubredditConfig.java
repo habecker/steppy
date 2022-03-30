@@ -1,9 +1,9 @@
 package de.y2g.processor.example.reddit.config;
 
-import de.y2g.processor.example.reddit.CrawlSubreddit;
-import de.y2g.processor.example.reddit.RedditConnect;
+import de.y2g.processor.example.reddit.CrawlSubredditStep;
+import de.y2g.processor.example.reddit.RedditConnectStep;
 
-public class CrawlSubredditConfig implements RedditConnect.Config, CrawlSubreddit.Config {
+public class CrawlSubredditConfig implements RedditConnectStep.Config, CrawlSubredditStep.Config {
     private String subreddit;
     private String user;
     private String password;

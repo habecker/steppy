@@ -9,8 +9,8 @@ import net.dean.jraw.oauth.Credentials;
 import net.dean.jraw.oauth.OAuthHelper;
 import org.springframework.stereotype.Component;
 
-@Component(RedditConnect.NAME)
-public class RedditConnect implements Step<RedditConnect.Config, Void, Void> {
+@Component(RedditConnectStep.NAME)
+public class RedditConnectStep implements Step<RedditConnectStep.Config, Void, Void> {
     public static final String NAME = "reddit-connect";
     public static final String REDDIT_CLIENT_STATE = "reddit-client";
     public static final String CLIENT_ID_PROPERTY = "reddit.client-id";
@@ -20,7 +20,7 @@ public class RedditConnect implements Step<RedditConnect.Config, Void, Void> {
     Variable<RedditClient> client;
 
     @Before(Phase.FLOW)
-    void connect(Context<RedditConnect.Config> context) throws ExecutionException {
+    void connect(Context<RedditConnectStep.Config> context) throws ExecutionException {
 
         String clientId = System.getProperty(CLIENT_ID_PROPERTY);
         String clientSecret = System.getProperty(CLIENT_SECRET_PROPERTY);
