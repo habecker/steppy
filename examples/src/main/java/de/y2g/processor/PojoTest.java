@@ -1,13 +1,10 @@
 package de.y2g.processor;
 
-import de.y2g.processor.example.*;
 import de.y2g.steppy.SingletonFlowBuilderFactory;
-import de.y2g.steppy.SingletonStepRepository;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.VerificationException;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class PojoTest {
@@ -17,6 +14,7 @@ public class PojoTest {
         var pool = Executors.newFixedThreadPool(8);
         SingletonFlowBuilderFactory.initialize(pool);
 
+        /*
         SingletonStepRepository.register(ProcessImagesStep.name, new ProcessImagesStep());
         SingletonStepRepository.register(UploadImageStep.name, new UploadImageStep());
         SingletonStepRepository.register(IntegerSourceStep.name, new IntegerSourceStep());
@@ -44,6 +42,7 @@ public class PojoTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        */
     }
 
 }

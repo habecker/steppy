@@ -1,10 +1,14 @@
 package de.y2g.processor;
 
-import de.y2g.processor.example.ProcessImagesStep;
+import de.y2g.processor.example.reddit.CrawlSubreddit;
+import de.y2g.processor.example.reddit.LogSubmission;
+import de.y2g.processor.example.reddit.RedditConnect;
+import de.y2g.processor.example.reddit.config.CrawlSubredditConfig;
 import de.y2g.steppy.api.Flow;
 import de.y2g.steppy.api.validation.VerificationException;
 import de.y2g.steppy.spring.FlowSupport;
 import de.y2g.steppy.spring.SpringFlowBuilderFactory;
+import net.dean.jraw.models.Submission;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -19,8 +23,20 @@ public class ProcessorApplication {
         SpringApplication.run(ProcessorApplication.class, args);
     }
 
-    @Bean(name = "imageFlow")
-    public Flow<Void, Integer, Integer> imageFlow(SpringFlowBuilderFactory flowBuilderFactory) throws VerificationException {
-        return flowBuilderFactory.builder(Void.class, Integer.class, Integer.class).append(ProcessImagesStep.name).concurrent().build();
+    @Bean(name = "redditFlow")
+    public Flow<CrawlSubredditConfig, Void, Void> redditFlow(SpringFlowBuilderFactory flowBuilderFactory) throws VerificationException {
+        return flowBuilderFactory
+                .builder(CrawlSubredditConfig.class, Void.class, Void.class)
+                .append(RedditConnect.NAME)
+                .append(CrawlSubreddit.NAME)
+                .nest(nestedBuilder -> nestedBuilder
+                        .branch(branchBuilder -> branchBuilder
+                                .when((context, submission) -> !((Submission) submission).isNsfw(),
+                                        builder1 -> builder1.append(LogSubmission.NAME))
+                                .otherwiseContinue()
+                        )
+                        .concurrent()
+                )
+                .build();
     }
 }
