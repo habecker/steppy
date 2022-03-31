@@ -3,11 +3,22 @@ package de.y2g.processor.example.reddit.config;
 import de.y2g.processor.example.reddit.CrawlSubredditStep;
 import de.y2g.processor.example.reddit.RedditConnectStep;
 
+import javax.annotation.Nonnull;
+import javax.validation.constraints.Positive;
+
 public class CrawlSubredditConfig implements RedditConnectStep.Config, CrawlSubredditStep.Config {
-    private String subreddit;
-    private String user;
-    private String password;
-    private int limit;
+
+    @Nonnull
+    private final String subreddit;
+
+    @Nonnull
+    private final String user;
+
+    @Nonnull
+    private final String password;
+
+    @Positive
+    private final int limit;
 
     public CrawlSubredditConfig(String user, String password, String subreddit, int limit) {
         this.user = user;

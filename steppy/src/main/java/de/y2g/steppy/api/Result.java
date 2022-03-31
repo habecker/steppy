@@ -34,6 +34,6 @@ public class Result<R> {
     public enum Type {
         SUCCEEDED,
         ABORTED,
-        FAILED;
+        FAILED
     }
 }

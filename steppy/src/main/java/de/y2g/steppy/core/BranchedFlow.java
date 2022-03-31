@@ -11,8 +11,8 @@ import java.util.function.BiPredicate;
 // TODO: veriy otherwise continue
 public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
     private final Typing<C, I, R> stepTyping;
-    private List<PredicatedFlow<C, I, R>> flows;
-    private boolean otherwiseContinue;
+    private final List<PredicatedFlow<C, I, R>> flows;
+    private final boolean otherwiseContinue;
 
     public BranchedFlow(List<PredicatedFlow<C, I, R>> flows, boolean otherwiseContinue) {
         // TODO throw exception if flows is empty
@@ -66,12 +66,12 @@ public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
 
         var flowInstance = flow.get().flow;
 
-        return (R) flowInstance.invokeSingleItem(context, (I) input);
+        return (R) flowInstance.invokeSingleItem(context, input);
     }
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID().toString() + "-nested-flow");
+        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
 
     @Override
@@ -80,7 +80,7 @@ public class BranchedFlow<C, I, R> implements StepProxy<C, I, R> {
     }
 
     public static class PredicatedFlow<C, I, R> {
-        private FlowProxy<C, I, R> flow;
+        private final FlowProxy<C, I, R> flow;
         private BiPredicate<Context<C>, I> predicate;
         private boolean isElse;
 

@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
-    private Executor executor;
+    private final Executor executor;
 
     public ConcurrentFlowProxy(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps, Executor executor) {
         super(typing, steps);

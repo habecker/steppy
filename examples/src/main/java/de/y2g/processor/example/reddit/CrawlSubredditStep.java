@@ -35,8 +35,8 @@ public class CrawlSubredditStep implements Step<CrawlSubredditStep.Config, Void,
         int limit = context.getConfiguration().getSubmissionLimit();
 
         Source<Submission> source = new Source<Submission>() {
-            Queue<Submission> batch = new LinkedList<>();
-            Iterator<Listing<Submission>> it = paginator.iterator();
+            final Queue<Submission> batch = new LinkedList<>();
+            final Iterator<Listing<Submission>> it = paginator.iterator();
             boolean active = true;
             int counter = 0;
 

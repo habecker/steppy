@@ -22,7 +22,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
     private final Typing<C, I, Void> stepTyping;
-    private Executor executor;
+    private final Executor executor;
 
     public NestedConcurrentFlow(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps, Executor executor) {
         super(typing, steps);
@@ -126,7 +126,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID().toString() + "-nested-flow");
+        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
 
     @Override

@@ -97,7 +97,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID().toString() + "-nested-flow");
+        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
 
     @Override

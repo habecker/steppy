@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class FlowBuilder<C, I, R> {
-    private Executor executor;
+    private final Executor executor;
     private final StepRepository repository;
     private final Class<C> configType;
     private final Class<I> inputType;

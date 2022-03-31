@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class PojoTest {
-    private static Logger logger = Logger.getLogger("main");
+    private static final Logger logger = Logger.getLogger("main");
 
     public static void main(String[] args) throws VerificationException, ExecutionException, InterruptedException {
         var pool = Executors.newFixedThreadPool(8);

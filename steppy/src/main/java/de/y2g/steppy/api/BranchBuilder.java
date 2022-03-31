@@ -11,11 +11,11 @@ import java.util.function.Consumer;
 
 public class BranchBuilder<C, I, R> {
     List<BranchedFlow.PredicatedFlow<C, I, R>> flows;
-    private StepRepository repository;
-    private Class<C> configType;
-    private Class<I> inputType;
-    private Class<R> returnType;
-    private Executor executor;
+    private final StepRepository repository;
+    private final Class<C> configType;
+    private final Class<I> inputType;
+    private final Class<R> returnType;
+    private final Executor executor;
     private boolean otherwiseContinue;
 
     BranchBuilder(Executor executor, StepRepository repository, Class<C> configType, Class<I> inputType, Class<R> returnType) {
