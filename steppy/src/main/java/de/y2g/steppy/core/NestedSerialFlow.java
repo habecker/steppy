@@ -3,13 +3,14 @@ package de.y2g.steppy.core;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Source;
+import de.y2g.steppy.api.nesting.Source;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,7 +53,8 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
 
         if (input instanceof Source) {
             var source = (Source<I>) input;
-            while (source.isActive()) {
+            var closed = new AtomicBoolean(false);
+            while (!closed.get()) {
                 try {
                     // TODO make this configurable
                     if (!source.next(Duration.ofSeconds(1), in -> {
@@ -61,6 +63,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                         } catch (ExecutionException e) {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
                             source.close();
+                            closed.set(true);
                         }
                     })) {
                         logger.log(Level.FINE, "Source became inactive while waiting.");
@@ -70,6 +73,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
                     source.close();
+                    closed.set(true);
                     break;
                 }
             }

@@ -3,7 +3,7 @@ package de.y2g.steppy.core;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Source;
+import de.y2g.steppy.api.nesting.Source;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -66,15 +67,17 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
         if (input instanceof Source) {
             Phaser executions = new Phaser(0);
             var source = (Source) input;
+            var closed = new AtomicBoolean(false);
 
-            while (source.isActive()) {
+            while (!closed.get()) {
                 try {
-                    // TODO make this configurable
+                    // FIXME make this configurable
                     if (!source.next(Duration.ofSeconds(1), in -> {
                         var c = new CompletableFuture<Result<R>>();
                         c.exceptionally(throwable -> {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + throwable.getMessage(), throwable);
                             source.close();
+                            closed.set(true);
                             return null;
                         }).thenAccept((result) -> {
                             executions.arriveAndDeregister();
@@ -98,6 +101,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
                     source.close();
+                    closed.set(true);
                     break;
                 }
             }

@@ -2,7 +2,7 @@ package de.y2g.processor.example.reddit;
 
 import de.y2g.steppy.api.*;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Source;
+import de.y2g.steppy.api.nesting.Source;
 import net.dean.jraw.RedditClient;
 import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Submission;
@@ -41,13 +41,8 @@ public class CrawlSubredditStep implements Step<CrawlSubredditStep.Config, Void,
             int counter = 0;
 
             @Override
-            public boolean isActive() {
-                return active && counter < limit;
-            }
-
-            @Override
             public synchronized boolean next(Duration timeout, Consumer<Submission> consumer) throws InterruptedException {
-                if (!isActive())
+                if (!active)
                     return false;
 
                 if (batch.isEmpty() && it.hasNext()) {

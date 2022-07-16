@@ -7,7 +7,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
-    <name>data-processor-prj</name>
 
     <modules>
         <module>steppy</module>

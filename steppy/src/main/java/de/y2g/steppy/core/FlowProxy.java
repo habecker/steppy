@@ -3,7 +3,7 @@ package de.y2g.steppy.core;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Source;
+import de.y2g.steppy.api.nesting.Source;
 import de.y2g.steppy.api.validation.VerificationError;
 import de.y2g.steppy.api.validation.VerificationErrorType;
 import de.y2g.steppy.api.validation.VerificationException;

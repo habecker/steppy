@@ -1,8 +1,6 @@
 package de.y2g.steppy.api;
 
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.streaming.Sink;
-import de.y2g.steppy.api.streaming.Source;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -17,6 +15,4 @@ public interface Flow<C, I, R> {
     }
 
     Collection<Result<R>> invoke(C configuration, Collection<I> input) throws ExecutionException;
-
-    void stream(C configuration, Source<I> source, Sink<Result<R>> sink) throws ExecutionException;
 }
