@@ -13,6 +13,7 @@ import net.dean.jraw.models.Submission;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class PojoTest {
     private static final Logger logger = Logger.getLogger("main");
@@ -20,7 +21,6 @@ public class PojoTest {
     public static void main(String[] args) throws VerificationException, ExecutionException, InterruptedException {
         var pool = Executors.newFixedThreadPool(8);
         SingletonFlowBuilderFactory.initialize(pool);
-
 
         SingletonStepRepository.register(CrawlSubredditStep.NAME, new CrawlSubredditStep());
         SingletonStepRepository.register(LogSubmissionStep.NAME, new LogSubmissionStep());

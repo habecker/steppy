@@ -45,7 +45,7 @@ class ExecutionState {
     + getState(step, name)
 }
 
-class StateVar<T> {
+class Variable<T> {
     set(Parameter, T)
     get(Parameter): T
     setIfNull(Parameter, T)
