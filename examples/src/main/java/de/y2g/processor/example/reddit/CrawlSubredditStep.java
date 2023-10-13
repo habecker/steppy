@@ -1,6 +1,10 @@
 package de.y2g.processor.example.reddit;
 
-import de.y2g.steppy.api.*;
+import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.DependsOn;
+import de.y2g.steppy.api.State;
+import de.y2g.steppy.api.Step;
+import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Source;
 import net.dean.jraw.RedditClient;

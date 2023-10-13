@@ -1,7 +1,15 @@
 package de.y2g.steppy.api;
 
 import de.y2g.steppy.api.validation.VerificationException;
-import de.y2g.steppy.core.*;
+import de.y2g.steppy.core.ConcurrentFlowProxy;
+import de.y2g.steppy.core.FlowProxy;
+import de.y2g.steppy.core.NestedConcurrentFlow;
+import de.y2g.steppy.core.NestedSerialFlow;
+import de.y2g.steppy.core.RuntimeStepProxy;
+import de.y2g.steppy.core.SerialFlowProxy;
+import de.y2g.steppy.core.StepIdentifier;
+import de.y2g.steppy.core.StepProxy;
+import de.y2g.steppy.core.Typing;
 
 import java.util.LinkedList;
 import java.util.List;

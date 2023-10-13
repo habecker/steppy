@@ -4,8 +4,8 @@ import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Source;
+import jakarta.validation.constraints.NotNull;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, Object, Void> {
     private final Typing<C, I, Void> stepTyping;
 
-    public NestedSerialFlow(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps) {
+    public NestedSerialFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
         super(typing, steps);
         stepTyping = new Typing<>(typing.getConfigType(), typing.getInputType(), Void.class);
     }

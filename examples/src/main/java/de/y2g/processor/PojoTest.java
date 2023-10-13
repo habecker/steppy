@@ -13,7 +13,6 @@ import net.dean.jraw.models.Submission;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class PojoTest {
     private static final Logger logger = Logger.getLogger("main");
@@ -29,6 +28,8 @@ public class PojoTest {
         var flow = SingletonFlowBuilderFactory.builder(CrawlSubredditConfig.class)
                 .append(RedditConnectStep.NAME)
                 .append(CrawlSubredditStep.NAME)
+                // TODO:
+                // .when(trigger, ...)
                 .nest(nestedBuilder -> nestedBuilder
                         .branch(branchBuilder -> branchBuilder
                                 .when((context, submission) -> !((Submission) submission).isNsfw(),

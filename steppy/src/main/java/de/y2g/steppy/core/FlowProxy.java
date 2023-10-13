@@ -7,9 +7,13 @@ import de.y2g.steppy.api.streaming.Source;
 import de.y2g.steppy.api.validation.VerificationError;
 import de.y2g.steppy.api.validation.VerificationErrorType;
 import de.y2g.steppy.api.validation.VerificationException;
+import jakarta.validation.constraints.NotNull;
 
-import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -22,7 +26,7 @@ public abstract class FlowProxy<C, I, R> {
 
     private final List<StepProxy> steps;
 
-    protected FlowProxy(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps) {
+    protected FlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
         // assert not empty
         this.typing = typing;
         this.steps = steps;

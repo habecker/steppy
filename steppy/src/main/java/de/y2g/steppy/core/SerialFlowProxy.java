@@ -6,8 +6,8 @@ import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Sink;
 import de.y2g.steppy.api.streaming.Source;
+import jakarta.validation.constraints.NotNull;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
 
-    public SerialFlowProxy(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps) {
+    public SerialFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
         super(typing, steps);
     }
 

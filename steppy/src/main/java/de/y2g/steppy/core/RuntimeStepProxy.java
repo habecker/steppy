@@ -1,9 +1,21 @@
 package de.y2g.steppy.core;
 
-import de.y2g.steppy.api.*;
+import de.y2g.steppy.api.After;
+import de.y2g.steppy.api.Before;
+import de.y2g.steppy.api.Concurrency;
+import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.DependsOn;
+import de.y2g.steppy.api.Phase;
+import de.y2g.steppy.api.State;
+import de.y2g.steppy.api.Step;
+import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.exception.ExecutionException;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

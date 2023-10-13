@@ -6,8 +6,8 @@ import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Sink;
 import de.y2g.steppy.api.streaming.Source;
+import jakarta.validation.constraints.NotNull;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +28,7 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
     private final Executor executor;
 
-    public ConcurrentFlowProxy(Typing<C, I, R> typing, @Nonnull List<StepProxy> steps, Executor executor) {
+    public ConcurrentFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
         super(typing, steps);
         this.taskExecutor = (supplier, future) -> {
             future.completeAsync(supplier, executor);
