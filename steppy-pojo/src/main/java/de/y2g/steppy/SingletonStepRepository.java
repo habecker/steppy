@@ -19,6 +19,7 @@ public class SingletonStepRepository extends de.y2g.steppy.api.StepRepository {
 
     public static void register(String name, Step step) {
         steps.put(name, step);
+        steps.put(step.getClass().getCanonicalName(), step);
     }
 
     @Override
@@ -27,5 +28,10 @@ public class SingletonStepRepository extends de.y2g.steppy.api.StepRepository {
             throw new IllegalArgumentException(String.format("Step with name %s was not found in the repository.", name));
         }
         return steps.get(name);
+    }
+
+    @Override
+    protected Step create(Class<? extends Step> stepType) {
+        return create(stepType.getCanonicalName());
     }
 }
