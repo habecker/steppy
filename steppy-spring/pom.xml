@@ -10,14 +10,15 @@
 
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <steppy.version>1.0-SNAPSHOT</steppy.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
     <dependencies>
         <dependency>
             <groupId>de.y2g</groupId>
             <artifactId>steppy</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${steppy.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
