@@ -1,10 +1,10 @@
-package de.y2g.steppy;
+package de.y2g.steppy.pojo;
 
 import de.y2g.steppy.api.FlowBuilder;
 
 import java.util.concurrent.ExecutorService;
 
-public class SingletonFlowBuilderFactory {
+public class StaticFlowBuilderFactory {
     private static PojoFlowBuilderFactory instance = null;
 
     public static void initialize(ExecutorService executorService) {
@@ -13,19 +13,19 @@ public class SingletonFlowBuilderFactory {
 
     private static PojoFlowBuilderFactory instance() {
         if (instance == null) {
-            throw new IllegalArgumentException("SingletonFlowBuilderFactory was not initialized");
+            throw new IllegalStateException("StaticFlowBuilderFactory was not initialized");
         }
 
         return instance;
     }
 
+    static void reset() {
+        instance = null;
+    }
+
 
     public static <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
         return instance().builder(configType, inputType, returnType);
-    }
-
-    public static <C> FlowBuilder<C, Void, Void> builder(Class<C> configType) {
-        return instance().builder(configType, Void.class, Void.class);
     }
 
     private static class PojoFlowBuilderFactory implements de.y2g.steppy.api.FlowBuilderFactory {
@@ -39,7 +39,7 @@ public class SingletonFlowBuilderFactory {
         public <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
             return new FlowBuilder<>(
                     executorService,
-                    SingletonStepRepository.instance(), configType, inputType, returnType);
+                    StaticStepRepository.instance(), configType, inputType, returnType);
         }
     }
 }

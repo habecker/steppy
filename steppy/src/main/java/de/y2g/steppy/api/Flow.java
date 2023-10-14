@@ -18,5 +18,5 @@ public interface Flow<C, I, R> {
 
     Collection<Result<R>> invoke(C configuration, Collection<I> input) throws ExecutionException;
 
-    void stream(C configuration, Source<I> source, Sink<Result<R>> sink) throws ExecutionException;
+    void stream(C configuration, Source<I> source, Sink<R> sink) throws ExecutionException;
 }

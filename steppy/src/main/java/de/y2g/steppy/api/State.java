@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 public @interface State {
     String name() default "";
 
-    boolean global() default false;
+    Scope scope() default Scope.STEP;
 }

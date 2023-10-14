@@ -5,11 +5,12 @@ import de.y2g.steppy.api.Before;
 import de.y2g.steppy.api.Concurrency;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.DependsOn;
-import de.y2g.steppy.api.Phase;
+import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.exception.ExecutionException;
+import jakarta.validation.constraints.Null;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -21,25 +22,35 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     private static final String GLOBAL_STATE_SCOPE = "global";
+
     private final StepIdentifier identifier;
+
     private final Step<C, I, R> delegate;
+
     private final Typing<C, I, R> typing;
+
     private final List<Method> beforeStepMethods;
+
     private final List<Method> afterStepMethods;
+
     private final List<Method> beforeFlowMethods;
+
     private final List<Method> afterFlowMethods;
+
     private final Concurrency.Type concurrencyType;
+
     private final Lock lock = new ReentrantLock();
+
     private final List<String> dependsOn;
 
     public RuntimeStepProxy(StepIdentifier identifier, Step<C, I, R> step) {
         this.identifier = identifier;
         this.delegate = step;
-
 
         DependsOn dependsOn = step.getClass().getAnnotation(DependsOn.class);
         if (dependsOn != null) {
@@ -55,89 +66,108 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
             concurrencyType = Concurrency.Type.ALLOW;
         }
 
-        beforeStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class,
-                a -> a.value() == Phase.STEP, Context.class);
-        beforeStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class,
-                a -> a.value() == Phase.STEP));
+        beforeStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.STEP,
+            Context.class);
+        beforeStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class, a -> a.value() == Scope.STEP));
 
-        afterStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class,
-                a -> a.value() == Phase.STEP, Context.class);
-        afterStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class,
-                a -> a.value() == Phase.STEP));
+        afterStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.STEP,
+            Context.class);
+        afterStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class, a -> a.value() == Scope.STEP));
 
-        beforeFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class,
-                a -> a.value() == Phase.FLOW, Context.class);
-        beforeFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class,
-                a -> a.value() == Phase.FLOW));
+        beforeFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.FLOW,
+            Context.class);
+        beforeFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class, a -> a.value() == Scope.FLOW));
 
-        afterFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class,
-                a -> a.value() == Phase.FLOW, Context.class);
-        afterFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class,
-                a -> a.value() == Phase.FLOW));
+        afterFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.FLOW,
+            Context.class);
+        afterFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class, a -> a.value() == Scope.FLOW));
 
-        var types = step.getClass().getGenericInterfaces();
+        // get step interface
+        var stepType = findParameterizedStepType(step.getClass());
 
         Class<?> inputType = Object.class;
         Class<?> returnType = Object.class;
         Class<?> configType = Object.class;
 
-        for (Type type : types) {
-            if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(Step.class)) {
-                var pt = (ParameterizedType) type;
-                Type[] actualTypeArguments = pt.getActualTypeArguments();
-                try {
-                    if (actualTypeArguments[1] instanceof ParameterizedType)
-                        inputType = Class.forName(((ParameterizedType) actualTypeArguments[1]).getRawType().getTypeName());
-                    else
-                        inputType = Class.forName(actualTypeArguments[1].getTypeName());
+        Type[] actualTypeArguments = stepType.getActualTypeArguments();
+        try {
+            if (actualTypeArguments[1] instanceof ParameterizedType)
+                inputType = Class.forName(((ParameterizedType)actualTypeArguments[1]).getRawType().getTypeName());
+            else
+                inputType = Class.forName(actualTypeArguments[1].getTypeName());
 
-                    if (actualTypeArguments[2] instanceof ParameterizedType)
-                        returnType = Class.forName(((ParameterizedType) actualTypeArguments[2]).getRawType().getTypeName());
-                    else
-                        returnType = Class.forName(actualTypeArguments[2].getTypeName());
+            if (actualTypeArguments[2] instanceof ParameterizedType)
+                returnType = Class.forName(((ParameterizedType)actualTypeArguments[2]).getRawType().getTypeName());
+            else
+                returnType = Class.forName(actualTypeArguments[2].getTypeName());
 
-                    if (actualTypeArguments[0] instanceof ParameterizedType)
-                        configType = Class.forName(((ParameterizedType) actualTypeArguments[0]).getRawType().getTypeName());
-                    else
-                        configType = Class.forName(actualTypeArguments[0].getTypeName());
-                } catch (ClassNotFoundException e) {
-                    throw new UnsupportedOperationException("Unexpected error: ", e);
-                }
-            }
+            if (actualTypeArguments[0] instanceof ParameterizedType)
+                configType = Class.forName(((ParameterizedType)actualTypeArguments[0]).getRawType().getTypeName());
+            else
+                configType = Class.forName(actualTypeArguments[0].getTypeName());
+        } catch (ClassNotFoundException e) {
+            throw new UnsupportedOperationException("Unexpected error: ", e);
         }
-        typing = new Typing<>((Class<C>) configType, (Class<I>) inputType, (Class<R>) returnType);
+        typing = new Typing<>((Class<C>)configType, (Class<I>)inputType, (Class<R>)returnType);
 
         Field[] fields = delegate.getClass().getDeclaredFields();
-        for (Field field : fields) {
+        for (Field field: fields) {
             State state = field.getAnnotation(State.class);
-            if (state != null && field.getType()
-                    .equals(Variable.class)) {
+            if (state != null && field.getType().equals(Variable.class)) {
                 String fieldName = field.getName();
 
                 if (!state.name().isEmpty()) {
                     fieldName = state.name();
                 }
 
-                Class<Variable> type = (Class<Variable>) field.getType();
+                Class<Variable> type = (Class<Variable>)field.getType();
                 try {
                     String scopeIdentifier = GLOBAL_STATE_SCOPE;
 
-                    if (!state.global())
+                    if (state.scope() == Scope.STEP)
                         scopeIdentifier = String.valueOf(System.identityHashCode(this));
 
                     // TODO: document behaviour
                     Variable variable = type.getConstructor(String.class, String.class)
-                            .newInstance(scopeIdentifier, fieldName + "-" + field.getGenericType().getTypeName());
+                        .newInstance(scopeIdentifier, fieldName + "-" + field.getGenericType().getTypeName());
                     boolean isAccessible = field.canAccess(delegate);
                     field.setAccessible(true);
                     field.set(delegate, variable);
                     field.setAccessible(isAccessible);
-                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-                        | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+                } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException |
+                    NoSuchMethodException | SecurityException e) {
                     throw new IllegalStateException(e);
                 }
             }
         }
+    }
+
+    private static ParameterizedType findParameterizedStepType(final Class<?> clazz) {
+        Class<?> current = clazz;
+        ParameterizedType type = getParameterizedStepType(current);
+        while (current != null && type == null) {
+            current = current.getSuperclass();
+            type = getParameterizedStepType(current);
+        }
+        if (type == null)
+            throw new IllegalArgumentException("Step does not implement parameterized step interface.");
+        return type;
+    }
+
+    @Null
+    private static ParameterizedType getParameterizedStepType(final Class<?> clazz) {
+        if (clazz == null)
+            return null;
+
+        var types = Stream.of(clazz.getGenericInterfaces())
+            .filter(i -> i instanceof ParameterizedType && ((ParameterizedType)i).getRawType().equals(Step.class)).toList();
+
+        if (types.isEmpty())
+            return null;
+        else if (types.size() > 1)
+            throw new IllegalArgumentException("Step implements Step interface multiple times.");
+
+        return (ParameterizedType)types.get(0);
     }
 
     @Override
@@ -180,12 +210,14 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
     private void invokeCallbacks(List<Method> methods, Context<C> context) throws ExecutionException {
         try {
-            for (Method method : methods) {
+            for (Method method: methods) {
                 method.setAccessible(true);
                 method.invoke(delegate, context);
             }
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new ExecutionException(e);
+        } catch (InvocationTargetException e) {
+            throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e.getTargetException());
+        } catch (IllegalAccessException e) {
+            throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e);
         }
     }
 

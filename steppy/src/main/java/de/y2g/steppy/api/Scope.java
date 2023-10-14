@@ -1,6 +1,6 @@
 package de.y2g.steppy.api;
 
-public enum Phase {
+public enum Scope {
     STEP,
     FLOW
 }

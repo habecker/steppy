@@ -12,6 +12,5 @@
     <modules>
         <module>steppy</module>
         <module>steppy-spring</module>
-        <module>steppy-pojo</module>
     </modules>
 </project>

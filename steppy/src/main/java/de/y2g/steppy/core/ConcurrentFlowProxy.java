@@ -76,7 +76,7 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
     }
 
     @Override
-    public void stream(C configuration, Source<I> source, Sink<Result<R>> sink) {
+    public void stream(C configuration, Source<I> source, Sink<R> sink) {
         executor.execute(() -> {
             Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
             // replace Phase to maintain lang level 11
@@ -144,35 +144,5 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                 });
             }
         });
-    }
-
-    public void invoke(C configuration, Collection<I> inputs, Consumer<Result<R>> consumer) throws ExecutionException {
-        Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
-        var context = new Context<>(configuration);
-        var asynchronousExecutions = new ArrayList<Supplier<Result<R>>>(inputs.size());
-        try {
-            callBefore(context);
-
-            for (I input : inputs) {
-                asynchronousExecutions.add(() -> {
-                    try {
-                        return invokeSingleItem(context, input);
-                    } catch (ExecutionException e) {
-                        logger.log(Level.SEVERE, "Error executing in parallel", e);
-                        return new Result<R>(Result.Type.FAILED, e);
-                    }
-                });
-            }
-
-            asynchronousExecutions
-                    .parallelStream()
-                    .forEach(supplier -> {
-                        var c = new CompletableFuture<Result<R>>();
-                        c.exceptionally(throwable -> new Result<R>(Result.Type.FAILED, throwable)).thenAccept(consumer);
-                        taskExecutor.accept(supplier, c);
-                    });
-        } finally {
-            callAfter(context);
-        }
     }
 }

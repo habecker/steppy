@@ -1,6 +1,6 @@
 package de.y2g.steppy.api;
 
-import de.y2g.steppy.api.validation.VerificationException;
+import de.y2g.steppy.api.validation.ValidationEception;
 import de.y2g.steppy.core.ConcurrentFlowProxy;
 import de.y2g.steppy.core.FlowProxy;
 import de.y2g.steppy.core.NestedConcurrentFlow;
@@ -42,12 +42,13 @@ public final class FlowBuilder<C, I, R> {
         return this;
     }
 
-    public <T> FlowBuilder<C, I, R> branch(Consumer<BranchBuilder<C, T, ?>> consumer) {
-        Class<T> iType = (Class<T>) inputType;
-
+    public FlowBuilder<C, I, R> append(Class<? extends Step> stepType) {
+        return append(stepType.getCanonicalName());
+    }
+    public <T, BR> FlowBuilder<C, I, R> branch(Class<T> inputType, Class<BR> returnType, Consumer<BranchBuilder<C, T, ?>> consumer) {
         if (!steps.isEmpty())
-            iType = steps.get(steps.size() - 1).getTyping().getInputType();
-        BranchBuilder<C, T, ?> builder = new BranchBuilder<>(executor, repository, configType, iType, Any.class);
+            inputType = steps.get(steps.size() - 1).getTyping().getInputType();
+        BranchBuilder<C, T, BR> builder = new BranchBuilder<>(executor, repository, configType, inputType, returnType);
         consumer.accept(builder);
         steps.add(builder.build());
         return this;
@@ -60,36 +61,16 @@ public final class FlowBuilder<C, I, R> {
     }
 
     // TODO: result handler?
-    public FlowBuilder<C, I, R> nest(Consumer<FlowBuilder<C, ?, Void>> consumer) {
-        FlowBuilder<C, ?, Void> nestedBuilder = new FlowBuilder<>(executor, repository, configType, steps.get(steps.size() - 1).getTyping().getReturnType(), Void.class);
+    public <NR> FlowBuilder<C, I, R> nest(Class<NR> returnType, Consumer<FlowBuilder<C, ?, NR>> consumer) {
+        FlowBuilder<C, ?, NR> nestedBuilder = new FlowBuilder<>(executor, repository, configType, steps.get(steps.size() - 1).getTyping().getReturnType(), returnType);
         consumer.accept(nestedBuilder);
         steps.add(nestedBuilder.buildNested());
         return this;
     }
 
-    public FlowBuilder<C, I, R> nest(Consumer<FlowBuilder<C, ?, Void>> consumer, String resultSupplier) {
-        FlowBuilder<C, ?, Void> nestedBuilder = new FlowBuilder<>(executor, repository, configType, steps.get(steps.size() - 1).getTyping().getReturnType(), Void.class);
-        consumer.accept(nestedBuilder);
-        steps.add(nestedBuilder.buildNested());
-        append(resultSupplier);
-        return this;
-    }
+    public Flow<C, I, R> build() throws ValidationEception {
 
-    // TODO: doc that this is always executed AFTER the flow and subsequent addings must fail
-    public FlowBuilder<C, I, R> repeat(BiPredicate<Context<C>, R> predicate) {
-        if (this.repetitionPredicate == null) {
-            throw new IllegalStateException("Predicate was already set");
-        }
-        if (!this.inputType.equals(this.returnType)) {
-            throw new IllegalStateException("Cannot use repetition as the input type does not match the return type");
-        }
-        this.repetitionPredicate = predicate;
-        return this;
-    }
-
-    public Flow<C, I, R> build() throws VerificationException {
-
-        if (returnType.equals(Any.class))
+        if (returnType.equals(None.class))
             returnType = steps.get(steps.size() - 1).getTyping().getReturnType();
 
         Flow<C, I, R> flow;
@@ -103,8 +84,8 @@ public final class FlowBuilder<C, I, R> {
         return flow;
     }
 
-    private StepProxy<C, Object, Void> buildNested() {
-        StepProxy<C, Object, Void> nestedFlow;
+    private StepProxy<C, I, R> buildNested() {
+        StepProxy<C, I, R> nestedFlow;
         if (concurrent) {
             nestedFlow = new NestedConcurrentFlow<>(new Typing<>(configType, inputType, returnType), steps, executor);
         } else {
@@ -113,8 +94,7 @@ public final class FlowBuilder<C, I, R> {
         return nestedFlow;
     }
 
-    protected FlowProxy<C, I, R> buildBranched() {
+    FlowProxy<C, I, R> buildBranched() {
         return new SerialFlowProxy<>(new Typing<>(configType, inputType, returnType), steps);
     }
-
 }

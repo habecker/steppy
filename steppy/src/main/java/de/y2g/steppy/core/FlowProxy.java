@@ -4,9 +4,9 @@ import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Source;
-import de.y2g.steppy.api.validation.VerificationError;
-import de.y2g.steppy.api.validation.VerificationErrorType;
-import de.y2g.steppy.api.validation.VerificationException;
+import de.y2g.steppy.api.validation.ValidationError;
+import de.y2g.steppy.api.validation.ValidationErrorType;
+import de.y2g.steppy.api.validation.ValidationEception;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
@@ -58,21 +58,21 @@ public abstract class FlowProxy<C, I, R> {
     }
 
 
-    public void verify() throws VerificationException {
+    public void verify() throws ValidationEception {
         Class<?> configType = typing.getConfigType();
-        List<VerificationError> errors = new ArrayList<>();
+        List<ValidationError> errors = new ArrayList<>();
 
         steps.forEach(step -> {
             if (!Typing.isConfigTypeCompatible(configType, step.getTyping())) {
-                errors.add(new VerificationError(VerificationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE, step.getIdentifier()));
+                errors.add(new ValidationError(ValidationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE, step.getIdentifier()));
             }
         });
 
         // TODO validate source generic type
-        if (!Typing.isInputTypeCompatible(typing.getInputType(), steps.get(0).getTyping())
+        if (!Typing.isInputTypeCompatible(steps.get(0).getTyping().getInputType(), typing)
                 && (!(this instanceof NestedSerialFlow && typing.getInputType().equals(Source.class)))
                 && (!(this instanceof NestedConcurrentFlow && typing.getInputType().equals(Source.class)))) {
-            errors.add(new VerificationError(VerificationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE, steps.get(0).getIdentifier()));
+            errors.add(new ValidationError(ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE, steps.get(0).getIdentifier()));
         }
 
         verifySteps(this.steps, errors);
@@ -81,11 +81,11 @@ public abstract class FlowProxy<C, I, R> {
         verifyReturnStep(errors);
 
         if (!errors.isEmpty()) {
-            throw new VerificationException("Flow verification failed with errors.", errors);
+            throw new ValidationEception("Flow verification failed with errors: " + errors.stream().map(ValidationError::getType).toList(), errors);
         }
     }
 
-    private void verifyDependents(List<StepProxy> steps, List<VerificationError> errors) {
+    private void verifyDependents(List<StepProxy> steps, List<ValidationError> errors) {
         Set<StepIdentifier> stepNames = new HashSet<>();
 
         for (StepProxy step :
@@ -93,19 +93,19 @@ public abstract class FlowProxy<C, I, R> {
             List<String> dependencies = step.getDependsOn();
 
             if (!stepNames.containsAll(dependencies.stream().map(StepIdentifier::new).collect(Collectors.toList()))) {
-                errors.add(new VerificationError(VerificationErrorType.DEPENDENCIES_UNFULFILLED, step.getIdentifier()));
+                errors.add(new ValidationError(ValidationErrorType.DEPENDENCIES_UNFULFILLED, step.getIdentifier()));
             }
             stepNames.add(step.getIdentifier());
         }
     }
 
-    private void verifyReturnStep(List<VerificationError> errors) {
+    private void verifyReturnStep(List<ValidationError> errors) {
         if (!(this instanceof NestedConcurrentFlow) && !(this instanceof NestedSerialFlow) && !Typing.isReturnTypeCompatible(typing.getReturnType(), steps.get(steps.size() - 1).getTyping())) {
-            errors.add(new VerificationError(VerificationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE, steps.get(steps.size() - 1).getIdentifier()));
+            errors.add(new ValidationError(ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE, steps.get(steps.size() - 1).getIdentifier()));
         }
     }
 
-    private void verifySteps(List<StepProxy> steps, List<VerificationError> errors) {
+    private void verifySteps(List<StepProxy> steps, List<ValidationError> errors) {
         var iterator = steps.iterator();
         StepProxy current = iterator.next();
 
@@ -113,7 +113,7 @@ public abstract class FlowProxy<C, I, R> {
             StepProxy next = iterator.next();
 
             if (!Typing.isInputTypeCompatible(current.getTyping(), next.getTyping())) {
-                errors.add(new VerificationError(VerificationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
+                errors.add(new ValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
             }
 
             try {
@@ -122,7 +122,7 @@ public abstract class FlowProxy<C, I, R> {
                 } else if (current instanceof NestedSerialFlow) {
                     ((NestedSerialFlow) current).verify();
                 }
-            } catch (VerificationException e) {
+            } catch (ValidationEception e) {
                 errors.addAll(e.getErrors());
             }
 
@@ -135,7 +135,7 @@ public abstract class FlowProxy<C, I, R> {
             } else if (current instanceof NestedSerialFlow) {
                 ((NestedSerialFlow) current).verify();
             }
-        } catch (VerificationException e) {
+        } catch (ValidationEception e) {
             errors.addAll(e.getErrors());
         }
     }

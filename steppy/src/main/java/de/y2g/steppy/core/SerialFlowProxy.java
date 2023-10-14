@@ -47,7 +47,7 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
     }
 
     @Override
-    public void stream(C configuration, Source<I> source, Sink<Result<R>> sink) throws ExecutionException {
+    public void stream(C configuration, Source<I> source, Sink<R> sink) throws ExecutionException {
         Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
         var context = new Context<>(configuration);
         try {
@@ -84,24 +84,4 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
 
         sink.close();
     }
-
-    public void invoke(C configuration, Collection<I> inputs, Consumer<Result<R>> consumer) throws ExecutionException {
-        var context = new Context<>(configuration);
-        try {
-            callBefore(context);
-            for (I input : inputs) {
-                Result<R> result;
-                try {
-                    result = invokeSingleItem(context, input);
-                } catch (ExecutionException e) {
-                    result = new Result<R>(Result.Type.FAILED, e);
-                }
-                consumer.accept(result);
-            }
-        } finally {
-            callAfter(context);
-        }
-    }
-
-
 }

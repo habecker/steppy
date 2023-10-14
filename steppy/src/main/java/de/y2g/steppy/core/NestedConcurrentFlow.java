@@ -18,10 +18,10 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, Object, Void> {
+public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, I, R> {
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
-    private final Typing<C, I, Void> stepTyping;
+    private final Typing<C, I, R> stepTyping;
     private final Executor executor;
 
     public NestedConcurrentFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
@@ -30,7 +30,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
         this.taskExecutor = (supplier, future) -> {
             future.completeAsync(supplier, executor);
         };
-        stepTyping = new Typing<>(typing.getConfigType(), typing.getInputType(), Void.class);
+        stepTyping = typing;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
     }
 
     @Override
-    public Void execute(Context<C> context, Object input) throws ExecutionException {
+    public R execute(Context<C> context, I input) throws ExecutionException {
         Logger logger = Logger.getLogger(String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
 
         if (input instanceof Source) {
@@ -107,7 +107,7 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
 
             switch (data.getType()) {
                 case SUCCEEDED:
-                    return null;
+                    return data.getResult();
                 case ABORTED:
                     context.abort();
                 case FAILED:
