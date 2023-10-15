@@ -1,0 +1,76 @@
+name: Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.10.0
+        with:
+          java-version: 21
+          java-distribution: temurin
+          maven-version: 3.9.4
+      - name: Build with Maven
+        run: mvn --batch-mode --update-snapshots package -DskipTests
+      - run: mkdir steppy/ && cp target/steppy-*.jar steppy/ && tar -czvf steppy.tar.gz steppy/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: steppy.zip
+          path: steppy.zip
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: target/
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Maven Action
+      uses: s4u/setup-maven-action@v1.10.0
+      with:
+        java-version: 21
+        java-distribution: temurin
+        maven-version: 3.9.4
+# Until https://github.com/go-gitea/gitea/issues/27415 is resolved
+#    - uses: actions/download-artifact@v2
+#      with:
+#        name: build
+    - name: Test
+      run: mvn --batch-mode --update-snapshots verify
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: gitea.ref == 'refs/heads/main'
+    branch: main
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.10.0
+        with:
+          java-version: 21
+          java-distribution: temurin
+          maven-version: 3.9.4
+      - name: Authenticate to Gitea Packages
+        uses: s4u/maven-settings-action@v2.8.0
+        with:
+          servers: |
+            [{
+                "id": "gitea",
+                "configuration": {
+                  "httpHeaders": {
+                    "property": {
+                      "name": "Authorization",
+                      "value": "token ${{ secrets.PACKAGES_TOKEN }}"
+                    }
+                  }
+                }
+            }]
+      # Until https://github.com/go-gitea/gitea/issues/27415 is resolved
+#     - uses: actions/download-artifact@v2
+#       with:
+#         name: build
+      - name: Deploy
+        run: mvn --batch-mode deploy -DskipTests -Durl=$GITEA_URL/api/packages/habecker/maven -DrepositoryId=gitea
