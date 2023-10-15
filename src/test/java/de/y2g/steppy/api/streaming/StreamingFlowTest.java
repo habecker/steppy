@@ -8,7 +8,7 @@ import de.y2g.steppy.api.NoopStep;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -25,12 +24,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.emptyIterator;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StreamingFlowTest {
@@ -93,7 +90,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testSequential() throws ExecutionException, ValidationEception, InterruptedException {
+    void testSequential() throws ExecutionException, ValidationException, InterruptedException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).build();
 
@@ -106,7 +103,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testConcurrent() throws ExecutionException, ValidationEception, InterruptedException {
+    void testConcurrent() throws ExecutionException, ValidationException, InterruptedException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).concurrent().build();
 
@@ -120,7 +117,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testInnerStreaming() throws ExecutionException, ValidationEception, InterruptedException {
+    void testInnerStreaming() throws ExecutionException, ValidationException, InterruptedException {
         var source = new SimpleSource<>(Stream.of("", "C"));
         var sourceStep = new SimpleStringSourceStep(source);
         var collectStep = new CollectStringStep();
@@ -145,7 +142,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testInnerStreamingConcurrent() throws ExecutionException, ValidationEception, InterruptedException {
+    void testInnerStreamingConcurrent() throws ExecutionException, ValidationException, InterruptedException {
         var source = new SimpleSource<>(Stream.of("", "C"));
         var sourceStep = new SimpleStringSourceStep(source);
         var collectStep = new CollectStringStep();

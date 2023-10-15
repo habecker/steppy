@@ -46,18 +46,9 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
     private final Lock lock = new ReentrantLock();
 
-    private final List<String> dependsOn;
-
     public RuntimeStepProxy(StepIdentifier identifier, Step<C, I, R> step) {
         this.identifier = identifier;
         this.delegate = step;
-
-        DependsOn dependsOn = step.getClass().getAnnotation(DependsOn.class);
-        if (dependsOn != null) {
-            this.dependsOn = Arrays.asList(dependsOn.value());
-        } else {
-            this.dependsOn = Collections.emptyList();
-        }
 
         Concurrency concurrency = step.getClass().getAnnotation(Concurrency.class);
         if (concurrency != null) {
@@ -224,10 +215,5 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     @Override
     public StepIdentifier getIdentifier() {
         return identifier;
-    }
-
-    @Override
-    public List<String> getDependsOn() {
-        return dependsOn;
     }
 }

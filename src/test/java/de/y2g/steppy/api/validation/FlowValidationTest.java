@@ -27,7 +27,7 @@ class FlowValidationTest {
 
     @Test
     void incompatibleIntermediate() {
-        assertThatExceptionOfType(ValidationEception.class).isThrownBy(
+        assertThatExceptionOfType(ValidationException.class).isThrownBy(
                 () -> StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class).append(AppendAStep.class)
                     .append(IncrementerStep.class).build()).matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE,
@@ -37,7 +37,7 @@ class FlowValidationTest {
 
     @Test
     void incompatibleReturnType() {
-        assertThatExceptionOfType(ValidationEception.class).isThrownBy(
+        assertThatExceptionOfType(ValidationException.class).isThrownBy(
                 () -> StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class).append(AppendAStep.class).build())
             .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE,
@@ -47,7 +47,7 @@ class FlowValidationTest {
 
     @Test
     void incompatibleConfigType() {
-        assertThatExceptionOfType(ValidationEception.class).isThrownBy(
+        assertThatExceptionOfType(ValidationException.class).isThrownBy(
                 () -> StaticFlowBuilderFactory.builder(String.class, String.class, String.class).append(AppendAStep.class).build())
             .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE,
@@ -57,7 +57,7 @@ class FlowValidationTest {
 
     @Test
     void incompatibleFlowInputType() {
-        assertThatExceptionOfType(ValidationEception.class).isThrownBy(
+        assertThatExceptionOfType(ValidationException.class).isThrownBy(
                 () -> StaticFlowBuilderFactory.builder(None.class, Integer.class, String.class).append(AppendAStep.class).build())
             .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE,

@@ -74,11 +74,6 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
         return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
 
-    @Override
-    public List<String> getDependsOn() {
-        return Collections.emptyList();
-    }
-
     public static class PredicatedFlow<C, I, R> {
         private final FlowProxy<C, I, R> flow;
         private BiPredicate<Context<C>, I> predicate;

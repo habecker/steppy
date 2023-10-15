@@ -19,6 +19,4 @@ public interface StepProxy<C, I, R> {
     void onAfterStep(Context<C> context) throws ExecutionException;
 
     StepIdentifier getIdentifier();
-
-    List<String> getDependsOn();
 }

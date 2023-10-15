@@ -128,9 +128,4 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
     public StepIdentifier getIdentifier() {
         return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
     }
-
-    @Override
-    public List<String> getDependsOn() {
-        return Collections.emptyList();
-    }
 }

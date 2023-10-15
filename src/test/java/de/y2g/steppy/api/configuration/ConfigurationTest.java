@@ -4,7 +4,7 @@ import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,7 +31,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void testAccessConfiguration() throws ExecutionException, ValidationEception {
+    void testAccessConfiguration() throws ExecutionException, ValidationException {
         var flow = builder(Integer.class, None.class, Integer.class)
             .append(ReturnConfigStep.class)
             .build();

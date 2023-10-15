@@ -3,7 +3,7 @@ package de.y2g.steppy.api.branches;
 import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.IncrementerStep;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,7 +24,7 @@ class BranchedFlowTest {
     }
 
     @Test
-    void testBranchedWithPreceedingStep() throws ExecutionException, ValidationEception {
+    void testBranchedWithPreceedingStep() throws ExecutionException, ValidationException {
         var flow = builder(None.class, Integer.class, Integer.class)
             .append(IncrementerStep.class)
             .branch(
@@ -45,7 +45,7 @@ class BranchedFlowTest {
 
 
     @Test
-    void testBranched() throws ExecutionException, ValidationEception {
+    void testBranched() throws ExecutionException, ValidationException {
         var flow = builder(None.class, Integer.class, Integer.class).branch(
             Integer.class,
             Integer.class,
@@ -63,7 +63,7 @@ class BranchedFlowTest {
     }
 
     @Test
-    void testOtherwiseContinue() throws ExecutionException, ValidationEception {
+    void testOtherwiseContinue() throws ExecutionException, ValidationException {
         var flow = builder(None.class, Integer.class, Integer.class).branch(
             Integer.class,
             Integer.class,
@@ -78,7 +78,7 @@ class BranchedFlowTest {
     }
 
     @Test
-    void testMissingBranch() throws ExecutionException, ValidationEception {
+    void testMissingBranch() throws ExecutionException, ValidationException {
         var flow = builder(None.class, Integer.class, Integer.class).branch(
             Integer.class,
             Integer.class,

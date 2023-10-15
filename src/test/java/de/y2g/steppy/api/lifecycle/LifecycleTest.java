@@ -9,7 +9,7 @@ import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.Variable;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -91,7 +91,7 @@ class LifecycleTest {
     }
 
     @Test
-    void testSequential() throws ExecutionException, ValidationEception {
+    void testSequential() throws ExecutionException, ValidationException {
         AtomicReference<String> result = new AtomicReference<>();
         StaticStepRepository.register("lifecycle", new LifecycleStep(result::set));
         var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
@@ -104,7 +104,7 @@ class LifecycleTest {
     }
 
     @Test
-    void testConcurrent() throws ExecutionException, ValidationEception {
+    void testConcurrent() throws ExecutionException, ValidationException {
         AtomicReference<String> result = new AtomicReference<>();
         StaticStepRepository.register("lifecycle", new LifecycleStep(result::set));
         var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
@@ -118,7 +118,7 @@ class LifecycleTest {
     }
 
     @Test
-    void testExceptionDuringLifecycle() throws ExecutionException, ValidationEception {
+    void testExceptionDuringLifecycle() throws ExecutionException, ValidationException {
         StaticStepRepository.register(LifecycleErrorStep.class);
         var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
             .append(LifecycleErrorStep.class)

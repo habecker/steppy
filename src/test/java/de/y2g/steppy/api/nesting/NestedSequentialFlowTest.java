@@ -5,7 +5,7 @@ import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
 import de.y2g.steppy.api.IncrementerStep;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +26,7 @@ class NestedSequentialFlowTest {
     }
 
     @Test
-    void testSequential() throws ExecutionException, ValidationEception {
+    void testSequential() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory
             .builder(None.class, String.class, String.class)
             .append(AppendAStep.class)
@@ -39,7 +39,7 @@ class NestedSequentialFlowTest {
     }
 
     @Test
-    void testConcurrent() throws ExecutionException, ValidationEception {
+    void testConcurrent() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory
             .builder(None.class, String.class, String.class)
             .append(AppendAStep.class)

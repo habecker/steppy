@@ -7,7 +7,7 @@ import de.y2g.steppy.api.FailStep;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,14 +30,14 @@ class SimpleConcurrentFlowTest {
     }
 
     @Test
-    void testSimple() throws ExecutionException, ValidationEception {
+    void testSimple() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).concurrent().build();
         assertThat(flow.invoke(None.value(), List.of("", "")).stream().map(Result::getResult)).isEqualTo(List.of("ABAB", "ABAB"));
     }
 
     @Test
-    void testFailure() throws ExecutionException, ValidationEception {
+    void testFailure() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class).append(FailStep.class).concurrent().build();
         var result = flow.invoke(None.value(), List.of(""));
 
@@ -48,7 +48,7 @@ class SimpleConcurrentFlowTest {
     }
 
     @Test
-    void testRuntimeError() throws ExecutionException, ValidationEception {
+    void testRuntimeError() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(RuntimeErrorStep.class).concurrent().build();
         var result = flow.invoke(None.value(), List.of(""));

@@ -9,7 +9,7 @@ import de.y2g.steppy.api.IncrementerStep;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,14 +35,14 @@ class SequentialFlowTest {
     }
 
     @Test
-    void testSequential() throws ExecutionException, ValidationEception {
+    void testSequential() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).build();
         assertThat(flow.invoke(None.value(), "").getResult()).isEqualTo("ABAB");
     }
 
     @Test
-    void testFailure() throws ExecutionException, ValidationEception {
+    void testFailure() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class).append(FailStep.class).build();
         var result = flow.invoke(None.value(), List.of(""));
 
@@ -53,7 +53,7 @@ class SequentialFlowTest {
     }
 
     @Test
-    void testRuntimeError() throws ValidationEception {
+    void testRuntimeError() throws ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(RuntimeErrorStep.class).build();
         assertThatRuntimeException().isThrownBy(() -> {
@@ -62,7 +62,7 @@ class SequentialFlowTest {
     }
 
     @Test
-    void testAbort() throws ValidationEception, ExecutionException {
+    void testAbort() throws ValidationException, ExecutionException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AbortStep.class).build();
         assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);

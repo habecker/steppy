@@ -6,7 +6,7 @@ import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.streaming.Source;
 import de.y2g.steppy.api.validation.ValidationError;
 import de.y2g.steppy.api.validation.ValidationErrorType;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public abstract class FlowProxy<C, I, R> {
     }
 
 
-    public void verify() throws ValidationEception {
+    public void verify() throws ValidationException {
         Class<?> configType = typing.getConfigType();
         List<ValidationError> errors = new ArrayList<>();
 
@@ -76,26 +76,11 @@ public abstract class FlowProxy<C, I, R> {
         }
 
         verifySteps(this.steps, errors);
-        verifyDependents(this.steps, errors);
 
         verifyReturnStep(errors);
 
         if (!errors.isEmpty()) {
-            throw new ValidationEception("Flow verification failed with errors: " + errors.stream().map(ValidationError::getType).toList(), errors);
-        }
-    }
-
-    private void verifyDependents(List<StepProxy> steps, List<ValidationError> errors) {
-        Set<StepIdentifier> stepNames = new HashSet<>();
-
-        for (StepProxy step :
-                steps) {
-            List<String> dependencies = step.getDependsOn();
-
-            if (!stepNames.containsAll(dependencies.stream().map(StepIdentifier::new).collect(Collectors.toList()))) {
-                errors.add(new ValidationError(ValidationErrorType.DEPENDENCIES_UNFULFILLED, step.getIdentifier()));
-            }
-            stepNames.add(step.getIdentifier());
+            throw new ValidationException("Flow verification failed with errors: " + errors.stream().map(ValidationError::getType).toList(), errors);
         }
     }
 
@@ -122,7 +107,7 @@ public abstract class FlowProxy<C, I, R> {
                 } else if (current instanceof NestedSerialFlow) {
                     ((NestedSerialFlow) current).verify();
                 }
-            } catch (ValidationEception e) {
+            } catch (ValidationException e) {
                 errors.addAll(e.getErrors());
             }
 
@@ -135,7 +120,7 @@ public abstract class FlowProxy<C, I, R> {
             } else if (current instanceof NestedSerialFlow) {
                 ((NestedSerialFlow) current).verify();
             }
-        } catch (ValidationEception e) {
+        } catch (ValidationException e) {
             errors.addAll(e.getErrors());
         }
     }

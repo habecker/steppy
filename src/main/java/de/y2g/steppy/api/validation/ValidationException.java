@@ -2,10 +2,10 @@ package de.y2g.steppy.api.validation;
 
 import java.util.List;
 
-public class ValidationEception extends Exception {
+public class ValidationException extends Exception {
     private final List<ValidationError> errors;
 
-    public ValidationEception(String message, List<ValidationError> errors) {
+    public ValidationException(String message, List<ValidationError> errors) {
         super(message);
         this.errors = errors;
     }

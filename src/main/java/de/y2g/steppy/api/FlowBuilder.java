@@ -1,6 +1,6 @@
 package de.y2g.steppy.api;
 
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.core.ConcurrentFlowProxy;
 import de.y2g.steppy.core.FlowProxy;
 import de.y2g.steppy.core.NestedConcurrentFlow;
@@ -68,7 +68,7 @@ public final class FlowBuilder<C, I, R> {
         return this;
     }
 
-    public Flow<C, I, R> build() throws ValidationEception {
+    public Flow<C, I, R> build() throws ValidationException {
 
         if (returnType.equals(None.class))
             returnType = steps.get(steps.size() - 1).getTyping().getReturnType();

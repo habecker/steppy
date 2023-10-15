@@ -2,7 +2,7 @@ package de.y2g.steppy.api.state;
 
 import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.exception.ExecutionException;
-import de.y2g.steppy.api.validation.ValidationEception;
+import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,7 +23,7 @@ class StateFlowTest {
     }
 
     @Test
-    void testLocalState() throws ExecutionException, ValidationEception {
+    void testLocalState() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class)
             .append(StateStep.class)
             .append(StateStep.class)
@@ -34,7 +34,7 @@ class StateFlowTest {
     }
 
     @Test
-    void testGlobalState() throws ExecutionException, ValidationEception {
+    void testGlobalState() throws ExecutionException, ValidationException {
         var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class)
             .append(GlobalStateStepA.class)
             .append(GlobalStateStepA.class)
