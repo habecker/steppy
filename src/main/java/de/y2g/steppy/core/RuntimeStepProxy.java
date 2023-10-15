@@ -59,19 +59,19 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
         beforeStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.STEP,
             Context.class);
-        beforeStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class, a -> a.value() == Scope.STEP));
+        beforeStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.STEP));
 
         afterStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.STEP,
             Context.class);
-        afterStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class, a -> a.value() == Scope.STEP));
+        afterStepMethods.addAll(ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.STEP));
 
         beforeFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.FLOW,
             Context.class);
-        beforeFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), Before.class, a -> a.value() == Scope.FLOW));
+        beforeFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.FLOW));
 
         afterFlowMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.FLOW,
             Context.class);
-        afterFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(getClass(), After.class, a -> a.value() == Scope.FLOW));
+        afterFlowMethods.addAll(ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), After.class, a -> a.value() == Scope.FLOW));
 
         // get step interface
         var stepType = findParameterizedStepType(step.getClass());
@@ -203,7 +203,11 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
         try {
             for (Method method: methods) {
                 method.setAccessible(true);
-                method.invoke(delegate, context);
+                if (method.getParameterCount() == 0){
+                    method.invoke(delegate);
+                } else {
+                    method.invoke(delegate, context);
+                }
             }
         } catch (InvocationTargetException e) {
             throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e.getTargetException());

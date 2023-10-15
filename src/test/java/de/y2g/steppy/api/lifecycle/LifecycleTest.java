@@ -83,8 +83,6 @@ class LifecycleTest {
             return None.value();
         }
     }
-
-
     @BeforeAll
     static void setup() {
         StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
@@ -127,5 +125,30 @@ class LifecycleTest {
         assertThat(result.getType()).isEqualTo(FAILED);
         assertThat(result.getException()).hasMessageContaining("An unknown error");
         assertThat(result.getException()).hasCauseInstanceOf(IOException.class);
+    }
+
+    @Test
+    void testBeforeWithoutContext() throws ExecutionException, ValidationException {
+        class LifecycleWithoutContext implements Step<None, None, None> {
+            static boolean beforeFlowCalled = false;
+
+            @Before(Scope.STEP)
+            void beforeStep() throws IOException {
+                beforeFlowCalled = true;
+            }
+
+            @Override
+            public None invoke(Context<None> context, None input) throws ExecutionException {
+                return None.value();
+            }
+        }
+
+
+        StaticStepRepository.register("lifecycle-no-context", new LifecycleWithoutContext());
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
+            .append("lifecycle-no-context")
+            .build();
+        flow.invoke(None.value(), None.value());
+        assertThat(LifecycleWithoutContext.beforeFlowCalled).isTrue();
     }
 }
