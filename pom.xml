@@ -9,12 +9,13 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <java.version>17</java.version>
     </properties>
 
     <scm>
         <url>https://git.y2g.de/habecker/steppy.git</url>
         <connection>scm:git:ssh://git@git.y2g.de/habecker/steppy.git</connection>
-        <tag>steppy-0.1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencies>

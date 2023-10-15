@@ -29,6 +29,8 @@ class SequentialFlowTest {
         StaticStepRepository.register(AppendBStep.class);
         StaticStepRepository.register(IncrementerStep.class);
         StaticStepRepository.register(AbortStep.class);
+        StaticStepRepository.register(FailStep.class);
+        StaticStepRepository.register(RuntimeErrorStep.class);
         StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
     }
 
