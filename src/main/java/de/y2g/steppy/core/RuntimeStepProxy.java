@@ -26,7 +26,6 @@ import java.util.stream.Stream;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
-    private static final String GLOBAL_STATE_SCOPE = "global";
 
     private final StepIdentifier identifier;
 
@@ -113,14 +112,9 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
                 Class<Variable> type = (Class<Variable>)field.getType();
                 try {
-                    String scopeIdentifier = GLOBAL_STATE_SCOPE;
-
-                    if (state.scope() == Scope.STEP)
-                        scopeIdentifier = String.valueOf(System.identityHashCode(this));
-
                     // TODO: document behaviour
-                    Variable variable = type.getConstructor(String.class, String.class)
-                        .newInstance(scopeIdentifier, fieldName + "-" + field.getGenericType().getTypeName());
+                    Variable variable = type.getConstructor(Scope.class, String.class)
+                        .newInstance(state.scope(), fieldName);
                     boolean isAccessible = field.canAccess(delegate);
                     field.setAccessible(true);
                     field.set(delegate, variable);

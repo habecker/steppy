@@ -30,7 +30,7 @@ class StateFlowTest {
             .append(StateStep.class)
             .append(StateStep.class)
             .build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(5 );
+        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(1 );
     }
 
     @Test

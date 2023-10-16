@@ -131,7 +131,7 @@ public abstract class FlowProxy<C, I, R> {
         LinkedList<StepProxy> steps = new LinkedList<>(getSteps());
         while (!steps.isEmpty()) {
             var current = steps.pop();
-            var subContext = context.sub();
+            var subContext = context.sub(System.identityHashCode(current) + "");
             try {
                 callBefore(subContext, current);
                 //TODO document this behaviour

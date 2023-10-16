@@ -1,19 +1,22 @@
 package de.y2g.steppy.api;
 
 public final class Context<C> {
+    private static final String GLOBAL_SCOPE = "global";
     private final C configuration;
+    private final String scopeId;
     private final ExecutionState state;
     private boolean abort = false;
 
     public Context(C configuration) {
-        this(configuration, new ExecutionState());
+        this(GLOBAL_SCOPE, configuration, new ExecutionState());
     }
 
-    private Context(Context<C> superior) {
-        this(superior.configuration, superior.state);
+    private Context(String scopeId, Context<C> superior) {
+        this(scopeId, superior.configuration, superior.state);
     }
 
-    Context(C configuration, ExecutionState state) {
+    Context(String scopeId, C configuration, ExecutionState state) {
+        this.scopeId = scopeId;
         this.configuration = configuration;
         this.state = state;
     }
@@ -22,10 +25,23 @@ public final class Context<C> {
         return configuration;
     }
 
-    protected ExecutionState getState() {
-        return state;
+    protected <T> T getState(String name, Scope scope) {
+        var requestedScopeId = switch (scope) {
+            case FLOW -> GLOBAL_SCOPE;
+            default -> scopeId;
+        };
+        var identifier = requestedScopeId + "." + name;
+
+        return state.getState(requestedScopeId, name);
     }
 
+    protected <T> void setState(String name, Scope scope, T value) {
+        var requestedScopeId = switch (scope) {
+            case FLOW -> GLOBAL_SCOPE;
+            default -> scopeId;
+        };
+        state.setState(requestedScopeId, name, value);
+    }
     public void abort() {
         abort = true;
     }
@@ -34,7 +50,7 @@ public final class Context<C> {
         return abort;
     }
 
-    public Context<C> sub() {
-        return new Context<>(this);
+    public Context<C> sub(String scope) {
+        return new Context<>(scope, this);
     }
 }
