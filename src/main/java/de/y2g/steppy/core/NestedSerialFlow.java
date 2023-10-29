@@ -60,7 +60,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                             invokeSingleItem(context, in);
                         } catch (ExecutionException e) {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
-                            source.close();
+                            source.onFailure(input, e);
                         }
                     })) {
                         logger.log(Level.FINE, "Source became inactive while waiting.");
@@ -74,21 +74,24 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                 }
             }
         } else {
-            Result<R> data = invokeSingleItem(context, (I) input);
+            Result<R> data;
+            try {
+                data = invokeSingleItem(context, (I) input);
+            } catch (ExecutionException e) {
+                data = new Result<>(Result.Type.FAILED, e);
+            }
 
             switch (data.getType()) {
                 case SUCCEEDED:
                     return data.getResult();
                 case ABORTED:
                     context.abort();
+                    break;
                 case FAILED:
                     var throwable = data.getException();
-                    if (throwable instanceof RuntimeException)
-                        throw (RuntimeException) throwable;
-                    else if (throwable instanceof ExecutionException)
-                        throw (ExecutionException) throwable;
-                    else
-                        throw new ExecutionException("Nested flow failed", throwable);
+                    if (throwable instanceof ExecutionException e)
+                        throw e;
+                    throw new ExecutionException("Nested flow failed", throwable);
             }
         }
 

@@ -21,10 +21,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
+
     private final Executor executor;
 
     public ConcurrentFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
@@ -37,47 +38,49 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
 
     @Override
     public Collection<Result<R>> invoke(C configuration, Collection<I> inputs) throws ExecutionException {
-        Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
+        Logger logger = Logger.getLogger(
+            String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
+                getTyping().getReturnType().getSimpleName()));
         var context = new Context<>(configuration);
         var asynchronousExecutions = new ArrayList<Supplier<Result<R>>>(inputs.size());
+        Collection<Result<R>> result;
         try {
             callBefore(context);
 
-            for (I input : inputs) {
+            for (I input: inputs) {
                 asynchronousExecutions.add(() -> {
                     try {
                         return invokeSingleItem(context, input);
                     } catch (ExecutionException e) {
                         logger.log(Level.FINE, String.format("Failed for input %s. Error is %s", input, e.getMessage()));
-                        return new Result<R>(Result.Type.FAILED, e);
+                        return new Result<>(Result.Type.FAILED, e);
                     } catch (Throwable e) {
                         logger.log(Level.SEVERE, "Error executing in parallel", e);
-                        return new Result<R>(Result.Type.FAILED, e);
+                        return new Result<>(Result.Type.FAILED, e);
                     }
                 });
             }
 
-            var exec = asynchronousExecutions
-                    .stream()
-                    .map(supplier -> {
-                        var c = new CompletableFuture<Result<R>>();
-                        c.exceptionally(throwable -> new Result<R>(Result.Type.FAILED, throwable));
-                        taskExecutor.accept(supplier, c);
-                        return c;
-                    })
-                    .collect(Collectors.toList());
+            var exec = asynchronousExecutions.stream().map(supplier -> {
+                var c = new CompletableFuture<Result<R>>();
+                c.exceptionally(throwable -> new Result<R>(Result.Type.FAILED, throwable));
+                taskExecutor.accept(supplier, c);
+                return c;
+            }).collect(Collectors.toList());
 
-            return exec.stream().map(CompletableFuture::join)
-                    .collect(Collectors.toList());
+            result = exec.stream().map(CompletableFuture::join).collect(Collectors.toList());
         } finally {
             callAfter(context);
         }
+        return result;
     }
 
     @Override
     public void stream(C configuration, Source<I> source, Sink<R> sink) {
         executor.execute(() -> {
-            Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
+            Logger logger = Logger.getLogger(
+                String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
+                    getTyping().getReturnType().getSimpleName()));
             // replace Phase to maintain lang level 11
             var context = new Context<>(configuration);
 
@@ -94,20 +97,27 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                         // TODO make this configurable
                         if (!source.next(Duration.ofSeconds(1), input -> {
                             var c = new CompletableFuture<Result<R>>();
-                            c.exceptionally(throwable -> new Result<R>(Result.Type.FAILED, throwable)).thenAccept((result) -> {
+                            c.thenAccept((result) -> {
+                                // TODO document exception behaviour
                                 sink.accept(result);
                                 executions.arriveAndDeregister();
                             });
-
 
                             executions.register();
                             // TODO add timeout for max execution time per item
                             taskExecutor.accept(() -> {
                                 try {
                                     return invokeSingleItem(context, input);
-                                } catch (ExecutionException e) {
+                                } catch (Exception e) {
                                     logger.log(Level.SEVERE, "Error executing in parallel", e);
-                                    return new Result<R>(Result.Type.FAILED, e);
+                                    source.onFailure(input, e);
+                                    executions.arriveAndDeregister();
+                                    if (e instanceof RuntimeException) {
+                                        // TODO document exception behaviour
+                                        source.close();
+                                        return new Result<>(Result.Type.FAILED, e);
+                                    }
+                                    return new Result<>(Result.Type.FAILED, e);
                                 }
                             }, c);
                         })) {

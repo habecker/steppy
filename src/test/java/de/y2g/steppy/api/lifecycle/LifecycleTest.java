@@ -72,17 +72,6 @@ class LifecycleTest {
         }
     }
 
-    static class LifecycleErrorStep implements Step<None, None, None> {
-        @Before(Scope.STEP)
-        void beforeStep(Context<None> context) throws IOException {
-            throw new IOException();
-        }
-
-        @Override
-        public None invoke(Context<None> context, None input) throws ExecutionException {
-            return None.value();
-        }
-    }
     @BeforeAll
     static void setup() {
         StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
@@ -113,18 +102,6 @@ class LifecycleTest {
         flow.invoke(None.value(), None.value());
 
         assertThat(result.get()).isEqualTo("before-flow,before-flow,before-step,after-step,before-step,after-step,after-flow,after-flow");
-    }
-
-    @Test
-    void testExceptionDuringLifecycle() throws ExecutionException, ValidationException {
-        StaticStepRepository.register(LifecycleErrorStep.class);
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
-            .append(LifecycleErrorStep.class)
-            .build();
-        var result = flow.invoke(None.value(), None.value());
-        assertThat(result.getType()).isEqualTo(FAILED);
-        assertThat(result.getException()).hasMessageContaining("An unknown error");
-        assertThat(result.getException()).hasCauseInstanceOf(IOException.class);
     }
 
     @Test

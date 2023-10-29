@@ -36,7 +36,7 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
                     Result<R> data = invokeSingleItem(context, input);
                     result.add(data);
                 } catch (ExecutionException e) {
-                    result.add(new Result<R>(Result.Type.FAILED, e));
+                    result.add(new Result<>(Result.Type.FAILED, e));
                 }
             }
         } finally {
@@ -60,7 +60,7 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
                         try {
                             sink.accept(invokeSingleItem(context, input));
                         } catch (ExecutionException e) {
-                            sink.accept(new Result<R>(Result.Type.FAILED, e));
+                            source.onFailure(input, e);
                         }
                     })) {
                         logger.log(Level.FINE, "Source became inactive while waiting.");

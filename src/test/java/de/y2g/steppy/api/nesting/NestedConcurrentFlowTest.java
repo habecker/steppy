@@ -1,11 +1,11 @@
 package de.y2g.steppy.api.nesting;
 
 import de.y2g.steppy.api.AbortStep;
-import de.y2g.steppy.api.FailStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
+import de.y2g.steppy.api.FailStep;
 import de.y2g.steppy.api.IncrementerStep;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatRuntimeException;
 
-class NestedSequentialFlowTest {
+class NestedConcurrentFlowTest {
 
     @BeforeAll
     static void setup() {
@@ -42,10 +42,12 @@ class NestedSequentialFlowTest {
             .nest(String.class, b ->
                 b.append(AppendBStep.class)
                     .append(AppendAStep.class)
+                    .concurrent()
             )
             .build();
         assertThat(flow.invoke(None.value(), "").getResult()).isEqualTo("ABA");
     }
+
 
     @Test
     void testFailure() throws ExecutionException, ValidationException {
@@ -56,6 +58,7 @@ class NestedSequentialFlowTest {
                 b
                     .append(AppendBStep.class)
                     .append(FailStep.class)
+                    .concurrent()
             )
             .build();
 
@@ -76,6 +79,7 @@ class NestedSequentialFlowTest {
                 b
                     .append(AppendBStep.class)
                     .append(RuntimeErrorStep.class)
+                    .concurrent()
             )
             .build();
         assertThatRuntimeException().isThrownBy(() -> {
@@ -92,6 +96,7 @@ class NestedSequentialFlowTest {
                 b
                     .append(AppendBStep.class)
                     .append(AbortStep.class)
+                    .concurrent()
             )
             .build();
         assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);

@@ -74,9 +74,12 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
                         var c = new CompletableFuture<Result<R>>();
                         c.exceptionally(throwable -> {
                             logger.log(Level.SEVERE, "Error occured during flow-streaming: " + throwable.getMessage(), throwable);
-                            source.close();
+                            source.onFailure(input, throwable);
                             return null;
                         }).thenAccept((result) -> {
+                            if (result.getType() == Result.Type.FAILED) {
+                                source.onFailure(input, result.getException());
+                            }
                             executions.arriveAndDeregister();
                         });
 
@@ -103,21 +106,24 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
             }
             executions.arriveAndAwaitAdvance();
         } else {
-            Result<R> data = invokeSingleItem(context, (I) input);
+            Result<R> data;
+            try {
+                data = invokeSingleItem(context, (I) input);
+            } catch (ExecutionException e) {
+                data = new Result<>(Result.Type.FAILED, e);
+            }
 
             switch (data.getType()) {
                 case SUCCEEDED:
                     return data.getResult();
                 case ABORTED:
                     context.abort();
+                    break;
                 case FAILED:
                     var throwable = data.getException();
-                    if (throwable instanceof RuntimeException)
-                        throw (RuntimeException) throwable;
-                    else if (throwable instanceof ExecutionException)
+                    if (throwable instanceof ExecutionException)
                         throw (ExecutionException) throwable;
-                    else
-                        throw new ExecutionException("Nested flow failed", throwable);
+                    throw new ExecutionException("Nested flow failed", throwable);
             }
         }
 

@@ -19,6 +19,6 @@ public class ValidationError {
     }
 
     public List<String> getSteps() {
-        return Arrays.stream(steps).map(StepIdentifier::getName).toList();
+        return Arrays.stream(steps).map(StepIdentifier::name).toList();
     }
 }

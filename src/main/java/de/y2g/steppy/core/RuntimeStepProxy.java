@@ -2,9 +2,7 @@ package de.y2g.steppy.core;
 
 import de.y2g.steppy.api.After;
 import de.y2g.steppy.api.Before;
-import de.y2g.steppy.api.Concurrency;
 import de.y2g.steppy.api.Context;
-import de.y2g.steppy.api.DependsOn;
 import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;
@@ -41,20 +39,11 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
     private final List<Method> afterFlowMethods;
 
-    private final Concurrency.Type concurrencyType;
-
     private final Lock lock = new ReentrantLock();
 
     public RuntimeStepProxy(StepIdentifier identifier, Step<C, I, R> step) {
         this.identifier = identifier;
         this.delegate = step;
-
-        Concurrency concurrency = step.getClass().getAnnotation(Concurrency.class);
-        if (concurrency != null) {
-            concurrencyType = concurrency.value();
-        } else {
-            concurrencyType = Concurrency.Type.ALLOW;
-        }
 
         beforeStepMethods = ReflectionUtils.findMethodsByAnnotation(delegate.getClass(), Before.class, a -> a.value() == Scope.STEP,
             Context.class);
@@ -177,20 +166,12 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
     @Override
     public void onBeforeStep(Context<C> context) throws ExecutionException {
-        if (concurrencyType == Concurrency.Type.LOCK) {
-            lock.lock();
-        }
-
         invokeCallbacks(beforeStepMethods, context);
     }
 
     @Override
     public void onAfterStep(Context<C> context) throws ExecutionException {
         invokeCallbacks(afterStepMethods, context);
-
-        if (concurrencyType == Concurrency.Type.LOCK) {
-            lock.unlock();
-        }
     }
 
     private void invokeCallbacks(List<Method> methods, Context<C> context) throws ExecutionException {
@@ -206,7 +187,7 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
         } catch (InvocationTargetException e) {
             throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e.getTargetException());
         } catch (IllegalAccessException e) {
-            throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e);
+            throw new IllegalStateException("An internal error occured during lifecycle callbacks.", e);
         }
     }
 
