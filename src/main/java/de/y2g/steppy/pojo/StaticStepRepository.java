@@ -27,6 +27,7 @@ public class StaticStepRepository extends de.y2g.steppy.api.StepRepository {
         steps.put(step.getClass().getCanonicalName(), step);
     }
 
+    @SafeVarargs
     public static void register(Class<? extends Step>... stepType) {
         for (Class<? extends Step> type : stepType) {
             register(type);
@@ -49,10 +50,5 @@ public class StaticStepRepository extends de.y2g.steppy.api.StepRepository {
             throw new IllegalArgumentException(String.format("Step with name %s was not found in the repository.", name));
         }
         return steps.get(name);
-    }
-
-    @Override
-    protected Step create(Class<? extends Step> stepType) {
-        return create(stepType.getCanonicalName());
     }
 }

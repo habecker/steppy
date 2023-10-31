@@ -22,14 +22,10 @@ public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
     private final Typing<C, I, R> stepTyping;
-    private final Executor executor;
 
     public NestedConcurrentFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
         super(typing, steps);
-        this.executor = executor;
-        this.taskExecutor = (supplier, future) -> {
-            future.completeAsync(supplier, executor);
-        };
+        this.taskExecutor = (supplier, future) -> future.completeAsync(supplier, executor);
         stepTyping = typing;
     }
 

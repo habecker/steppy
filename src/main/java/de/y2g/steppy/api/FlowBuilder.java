@@ -63,7 +63,13 @@ public final class FlowBuilder<C, I, R> {
 
     // TODO: result handler?
     public <NR> FlowBuilder<C, I, R> nest(Class<NR> returnType, Consumer<FlowBuilder<C, ?, NR>> consumer) {
-        FlowBuilder<C, ?, NR> nestedBuilder = new FlowBuilder<>(executor, repository, configType, steps.get(steps.size() - 1).getTyping().getReturnType(), returnType);
+        Class<?> nestedInputType = null;
+        if (!steps.isEmpty()) {
+            nestedInputType = steps.get(steps.size() - 1).getTyping().getReturnType();
+        } else {
+            nestedInputType = this.inputType;
+        }
+        FlowBuilder<C, ?, NR> nestedBuilder = new FlowBuilder<>(executor, repository, configType, nestedInputType, returnType);
         consumer.accept(nestedBuilder);
         steps.add(nestedBuilder.buildNested());
         return this;

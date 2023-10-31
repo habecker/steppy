@@ -22,9 +22,4 @@ public class SpringStepRepository extends StepRepository {
         return this.context.getBean(name, Step.class);
     }
 
-    @Override
-    protected Step create(Class<? extends Step> stepType) {
-        return this.context.getBean(stepType);
-    }
-
 }

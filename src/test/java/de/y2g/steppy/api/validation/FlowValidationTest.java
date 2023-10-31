@@ -65,4 +65,13 @@ class FlowValidationTest {
                 .equals(List.of(AppendAStep.class.getCanonicalName())));
     }
 
+    @Test
+    void nestedFlow() {
+        assertThatExceptionOfType(ValidationException.class).isThrownBy(
+                        () -> StaticFlowBuilderFactory.builder(None.class, Integer.class, String.class).nest(String.class, b -> b.append(AppendAStep.class)).build())
+                .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
+                .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE,
+                        "Must be of type STEP_INPUT_TYPE_INCOMPATIBLE").matches(e -> e.getErrors().get(0).getSteps()
+                        .equals(List.of(AppendAStep.class.getCanonicalName())));
+    }
 }

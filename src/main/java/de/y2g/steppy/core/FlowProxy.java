@@ -101,19 +101,15 @@ public abstract class FlowProxy<C, I, R> {
                 errors.add(new ValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
             }
 
-            try {
-                if (current instanceof NestedConcurrentFlow) {
-                    ((NestedConcurrentFlow) current).verify();
-                } else if (current instanceof NestedSerialFlow) {
-                    ((NestedSerialFlow) current).verify();
-                }
-            } catch (ValidationException e) {
-                errors.addAll(e.getErrors());
-            }
+            verifyNestedFlow(errors, current);
 
             current = next;
         }
 
+        verifyNestedFlow(errors, current);
+    }
+
+    private static void verifyNestedFlow(List<ValidationError> errors, StepProxy current) {
         try {
             if (current instanceof NestedConcurrentFlow) {
                 ((NestedConcurrentFlow) current).verify();
@@ -137,7 +133,7 @@ public abstract class FlowProxy<C, I, R> {
                 //TODO document this behaviour
                 if (subContext.isAbort()) {
                     this.logger.log(Level.FINE, String.format("Aborted for input %s by step %s in @Before handler", input, current.getIdentifier()));
-                    return null;
+                    return new Result<R>(Result.Type.ABORTED);
                 }
 
                 data = current.execute(subContext, data);

@@ -25,12 +25,7 @@ class SequentialFlowTest {
 
     @BeforeAll
     static void setup() {
-        StaticStepRepository.register(AppendAStep.class);
-        StaticStepRepository.register(AppendBStep.class);
-        StaticStepRepository.register(IncrementerStep.class);
-        StaticStepRepository.register(AbortStep.class);
-        StaticStepRepository.register(FailStep.class);
-        StaticStepRepository.register(RuntimeErrorStep.class);
+        StaticStepRepository.register(AppendAStep.class, AppendBStep.class, IncrementerStep.class, AbortStep.class, FailStep.class, RuntimeErrorStep.class, AbortBeforeStep.class);
         StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
     }
 
@@ -65,6 +60,13 @@ class SequentialFlowTest {
     void testAbort() throws ValidationException, ExecutionException {
         var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
             .append(AbortStep.class).build();
+        assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
+    }
+
+    @Test
+    void testAbortBefore() throws ValidationException, ExecutionException {
+        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+                .append(AbortBeforeStep.class).build();
         assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
     }
 }
