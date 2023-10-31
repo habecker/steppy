@@ -51,4 +51,9 @@ public class StaticStepRepository extends de.y2g.steppy.api.StepRepository {
         }
         return steps.get(name);
     }
+
+    @Override
+    protected Step create(Class<? extends Step> stepType) {
+        return create(stepType.getCanonicalName());
+    }
 }
