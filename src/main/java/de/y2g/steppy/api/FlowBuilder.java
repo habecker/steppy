@@ -43,7 +43,9 @@ public final class FlowBuilder<C, I, R> {
     }
 
     public FlowBuilder<C, I, R> append(Class<? extends Step> stepType) {
-        return append(stepType.getCanonicalName());
+        Step step = repository.create(stepType);
+        steps.add(new RuntimeStepProxy(new StepIdentifier(stepType.getCanonicalName()), step));
+        return this;
     }
 
     public <T, BR> FlowBuilder<C, I, R> branch(Class<T> inputType, Class<BR> returnType, Consumer<BranchBuilder<C, T, ?>> consumer) {

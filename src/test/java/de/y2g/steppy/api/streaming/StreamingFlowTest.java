@@ -92,7 +92,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testInnerStreaming() throws ExecutionException, ValidationException, InterruptedException {
+    void testInnerStreaming() throws ExecutionException, ValidationException {
         var source = new SimpleSource<>(Stream.of("", "C"));
         var sourceStep = new SimpleStringSourceStep(source);
         var collectStep = new CollectStringStep();
@@ -117,7 +117,7 @@ class StreamingFlowTest {
     }
 
     @Test
-    void testInnerStreamingError() throws ExecutionException, ValidationException, InterruptedException {
+    void testInnerStreamingError() throws ExecutionException, ValidationException {
         var source = new SimpleSource<>(Stream.of(""));
         var sourceStep = new SimpleStringSourceStep(source);
         var collectStep = new CollectStringStep();
