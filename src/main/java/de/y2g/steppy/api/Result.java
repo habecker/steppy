@@ -2,7 +2,9 @@ package de.y2g.steppy.api;
 
 public class Result<R> {
     R result;
+
     Type type;
+
     Throwable throwable;
 
     public Result(R result, Type type) {
@@ -32,8 +34,6 @@ public class Result<R> {
     }
 
     public enum Type {
-        SUCCEEDED,
-        ABORTED,
-        FAILED
+        SUCCEEDED, ABORTED, FAILED
     }
 }

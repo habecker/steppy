@@ -1,20 +1,24 @@
 package de.y2g.steppy.api.streaming;
 
-import de.y2g.steppy.api.FailStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
+import de.y2g.steppy.api.Before;
+import de.y2g.steppy.api.FailStep;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.NoopStep;
+import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -24,13 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StreamingFlowTest {
 
-    @BeforeAll
-    static void setup() {
+    private ExecutorService executorService;
+
+    @BeforeEach
+    void setup() {
         StaticStepRepository.register(AppendAStep.class);
         StaticStepRepository.register(AppendBStep.class);
         StaticStepRepository.register(NoopStep.class);
         StaticStepRepository.register(FailStep.class);
-        StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
+        executorService = Executors.newSingleThreadExecutor();
+        StaticFlowBuilderFactory.initialize(executorService);
     }
 
     @Test
@@ -91,6 +98,31 @@ class StreamingFlowTest {
         assertThat(failures.get(0)).isInstanceOf(ExecutionException.class);
     }
 
+    @Disabled
+    @Test
+    void testSinkClosedWhenExecutorTerminated() throws ExecutionException, ValidationException, InterruptedException {
+        class Step extends NoopStep {
+            @Before(Scope.STEP)
+            public void before() throws InterruptedException {
+                executorService.shutdown();
+                executorService.awaitTermination(1, java.util.concurrent.TimeUnit.SECONDS);
+            }
+        }
+
+        StaticStepRepository.register("step", new Step());
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("step").concurrent().build();
+
+        var source = new InfiniteSource<>(None.value());
+        var sink = new SimpleSink<None>();
+
+        flow.stream(None.value(), source, sink);
+
+        executorService.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
+
+        assertThat(sink.isClosed()).isTrue();
+        assertThat(sink.getResult()).isEmpty();
+    }
+
     @Test
     void testInnerStreaming() throws ExecutionException, ValidationException {
         var source = new SimpleSource<>(Stream.of("", "C"));
@@ -100,16 +132,9 @@ class StreamingFlowTest {
         StaticStepRepository.register("source", sourceStep);
         StaticStepRepository.register("collect", collectStep);
 
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
-            .append("source")
-            .nest(None.class, b -> b
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append("collect")
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("source").nest(None.class,
+            b -> b.append(AppendAStep.class).append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class)
+                .append("collect")).build();
 
         flow.invoke(None.value());
 
@@ -125,14 +150,8 @@ class StreamingFlowTest {
         StaticStepRepository.register("source", sourceStep);
         StaticStepRepository.register("collect", collectStep);
 
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
-            .append("source")
-            .nest(None.class, b -> b
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append(FailStep.class)
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("source")
+            .nest(None.class, b -> b.append(AppendAStep.class).append(AppendBStep.class).append(FailStep.class)).build();
 
         flow.invoke(None.value());
 
@@ -140,7 +159,6 @@ class StreamingFlowTest {
         assertThat(failures).hasSize(1);
         assertThat(failures.get(0)).isInstanceOf(ExecutionException.class);
     }
-
 
     @Test
     void testInnerStreamingConcurrent() throws ExecutionException, ValidationException, InterruptedException {
@@ -151,17 +169,9 @@ class StreamingFlowTest {
         StaticStepRepository.register("source", sourceStep);
         StaticStepRepository.register("collect", collectStep);
 
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
-            .append("source")
-            .nest(None.class, b -> b
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append("collect")
-                .concurrent()
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("source").nest(None.class,
+            b -> b.append(AppendAStep.class).append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).append("collect")
+                .concurrent()).build();
 
         flow.invoke(None.value());
 
@@ -178,17 +188,9 @@ class StreamingFlowTest {
         StaticStepRepository.register("source", sourceStep);
         StaticStepRepository.register("collect", collectStep);
 
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class)
-            .append("source")
-            .nest(None.class, b -> b
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append(AppendAStep.class)
-                .append(AppendBStep.class)
-                .append(FailStep.class)
-                .concurrent()
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("source").nest(None.class,
+            b -> b.append(AppendAStep.class).append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class)
+                .append(FailStep.class).concurrent()).build();
 
         flow.invoke(None.value());
 

@@ -7,7 +7,6 @@ import de.y2g.steppy.api.streaming.Source;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -15,6 +14,8 @@ import java.util.logging.Logger;
 
 public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, I, R> {
     private final Typing<C, I, R> stepTyping;
+
+    private final UUID uuid = UUID.randomUUID();
 
     public NestedSerialFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
         super(typing, steps);
@@ -48,10 +49,12 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
 
     @Override
     public R execute(Context<C> context, I input) throws ExecutionException {
-        Logger logger = Logger.getLogger(String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
+        Logger logger = Logger.getLogger(
+            String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
+                getTyping().getReturnType().getSimpleName()));
 
         if (input instanceof Source) {
-            var source = (Source<I>) input;
+            var source = (Source<I>)input;
             while (source.isActive()) {
                 try {
                     // TODO make this configurable
@@ -59,7 +62,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                         try {
                             invokeSingleItem(context, in);
                         } catch (ExecutionException e) {
-                            logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                            logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
                             source.onFailure(input, e);
                         }
                     })) {
@@ -68,7 +71,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
                     }
 
                 } catch (InterruptedException e) {
-                    logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                    logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
                     source.close();
                     break;
                 }
@@ -76,22 +79,19 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
         } else {
             Result<R> data;
             try {
-                data = invokeSingleItem(context, (I) input);
+                data = invokeSingleItem(context, input);
             } catch (ExecutionException e) {
                 data = new Result<>(Result.Type.FAILED, e);
             }
 
             switch (data.getType()) {
-                case SUCCEEDED:
-                    return data.getResult();
-                case ABORTED:
-                    context.abort();
-                    break;
-                case FAILED:
-                    var throwable = data.getException();
-                    if (throwable instanceof ExecutionException e)
-                        throw e;
-                    throw new ExecutionException("Nested flow failed", throwable);
+            case SUCCEEDED:
+                return data.getResult();
+            case ABORTED:
+                context.abort();
+                break;
+            case FAILED:
+                throw new ExecutionException("Nested flow failed", data.getException());
             }
         }
 
@@ -100,6 +100,6 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
+        return new StepIdentifier(uuid + "-nested-flow");
     }
 }

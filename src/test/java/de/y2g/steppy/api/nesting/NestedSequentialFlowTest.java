@@ -1,11 +1,11 @@
 package de.y2g.steppy.api.nesting;
 
 import de.y2g.steppy.api.AbortStep;
-import de.y2g.steppy.api.FailStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
+import de.y2g.steppy.api.FailStep;
 import de.y2g.steppy.api.IncrementerStep;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -36,48 +36,28 @@ class NestedSequentialFlowTest {
 
     @Test
     void testSequential() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory
-            .builder(None.class, String.class, String.class)
-            .append(AppendAStep.class)
-            .nest(String.class, b ->
-                b.append(AppendBStep.class)
-                    .append(AppendAStep.class)
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+            .nest(String.class, b -> b.append(AppendBStep.class).append(AppendAStep.class)).build();
         assertThat(flow.invoke(None.value(), "").getResult()).isEqualTo("ABA");
     }
 
     @Test
     void testFailure() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory
-            .builder(None.class, String.class, String.class)
-            .append(AppendAStep.class)
-            .nest(String.class, b ->
-                b
-                    .append(AppendBStep.class)
-                    .append(FailStep.class)
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+            .nest(String.class, b -> b.append(AppendBStep.class).append(FailStep.class)).build();
 
         var result = flow.invoke(None.value(), List.of(""));
 
         assertThat(result).hasSize(1);
         var singleResult = result.stream().toList().get(0);
         assertThat(singleResult.getType()).isEqualTo(Result.Type.FAILED);
-        assertThat(singleResult.getException()).hasMessage("Fail");
+        assertThat(singleResult.getException()).hasMessage("Nested flow failed");
     }
 
     @Test
     void testRuntimeError() throws ValidationException {
-        var flow = StaticFlowBuilderFactory
-            .builder(None.class, String.class, String.class)
-            .append(AppendAStep.class)
-            .nest(String.class, b ->
-                b
-                    .append(AppendBStep.class)
-                    .append(RuntimeErrorStep.class)
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+            .nest(String.class, b -> b.append(AppendBStep.class).append(RuntimeErrorStep.class)).build();
         assertThatRuntimeException().isThrownBy(() -> {
             flow.invoke(None.value(), List.of(""));
         }).withMessage("Oh no");
@@ -85,15 +65,8 @@ class NestedSequentialFlowTest {
 
     @Test
     void testAbort() throws ValidationException, ExecutionException {
-        var flow = StaticFlowBuilderFactory
-            .builder(None.class, String.class, String.class)
-            .append(AppendAStep.class)
-            .nest(String.class, b ->
-                b
-                    .append(AppendBStep.class)
-                    .append(AbortStep.class)
-            )
-            .build();
+        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+            .nest(String.class, b -> b.append(AppendBStep.class).append(AbortStep.class)).build();
         assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpringFlowBuilderFactory implements FlowBuilderFactory {
     private final StepRepository stepRepository;
+
     private final TaskExecutor flowTaskExecutor;
 
     @Autowired
@@ -20,8 +21,6 @@ public class SpringFlowBuilderFactory implements FlowBuilderFactory {
 
     @Override
     public <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
-        return new FlowBuilder<>(
-                flowTaskExecutor,
-                stepRepository, configType, inputType, returnType);
+        return new FlowBuilder<>(flowTaskExecutor, stepRepository, configType, inputType, returnType);
     }
 }

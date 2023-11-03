@@ -18,7 +18,8 @@ public class ReflectionUtils {
         }).collect(Collectors.toList());
     }
 
-    public static <A extends Annotation> List<Method> findMethodsByAnnotation(Class<?> type, Class<A> annotationType, Predicate<A> filter, Class<?> parameterType) {
+    public static <A extends Annotation> List<Method> findMethodsByAnnotation(Class<?> type, Class<A> annotationType, Predicate<A> filter,
+        Class<?> parameterType) {
         return Arrays.stream(type.getDeclaredMethods()).filter(method -> {
             Class<?>[] params = method.getParameterTypes();
             if (params.length != 1)

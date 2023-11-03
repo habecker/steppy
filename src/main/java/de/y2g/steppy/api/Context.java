@@ -1,10 +1,16 @@
 package de.y2g.steppy.api;
 
+import static de.y2g.steppy.api.Scope.FLOW;
+
 public final class Context<C> {
     private static final String GLOBAL_SCOPE = "global";
+
     private final C configuration;
+
     private final String scopeId;
+
     private final ExecutionState state;
+
     private boolean abort = false;
 
     public Context(C configuration) {
@@ -25,23 +31,16 @@ public final class Context<C> {
         return configuration;
     }
 
-    protected <T> T getState(String name, Scope scope) {
-        var requestedScopeId = switch (scope) {
-            case FLOW -> GLOBAL_SCOPE;
-            default -> scopeId;
-        };
-        var identifier = requestedScopeId + "." + name;
-
+    <T> T getState(String name, Scope scope) {
+        var requestedScopeId = (scope == FLOW) ? GLOBAL_SCOPE : scopeId;
         return state.getState(requestedScopeId, name);
     }
 
-    protected <T> void setState(String name, Scope scope, T value) {
-        var requestedScopeId = switch (scope) {
-            case FLOW -> GLOBAL_SCOPE;
-            default -> scopeId;
-        };
+    <T> void setState(String name, Scope scope, T value) {
+        var requestedScopeId = (scope == FLOW) ? GLOBAL_SCOPE : scopeId;
         state.setState(requestedScopeId, name, value);
     }
+
     public void abort() {
         abort = true;
     }

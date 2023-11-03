@@ -10,19 +10,16 @@ import de.y2g.steppy.api.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
-public abstract class FlowProxy<C, I, R> {
+@SuppressWarnings({ "unchecked", "rawtypes" })
+public abstract class FlowProxy<C, I, R> implements Verifiable {
     private final Logger logger;
-    private final Typing<C, I, R> typing;
 
+    private final Typing<C, I, R> typing;
 
     private final List<StepProxy> steps;
 
@@ -30,21 +27,29 @@ public abstract class FlowProxy<C, I, R> {
         // assert not empty
         this.typing = typing;
         this.steps = steps;
-        this.logger = Logger.getLogger(String.format("flow-%s-%s-%s", typing.getConfigType().getSimpleName(), typing.getInputType().getSimpleName(), typing.getReturnType().getSimpleName()));
+        this.logger = Logger.getLogger(
+            String.format("flow-%s-%s-%s", typing.getConfigType().getSimpleName(), typing.getInputType().getSimpleName(),
+                typing.getReturnType().getSimpleName()));
+    }
+
+    private static void verifyWhenVerifiable(List<ValidationError> errors, StepProxy current) {
+        try {
+            if (current instanceof Verifiable verifiable) {
+                verifiable.verify();
+            }
+        } catch (ValidationException e) {
+            errors.addAll(e.getErrors());
+        }
     }
 
     protected void callBefore(Context<C> context) throws ExecutionException {
-        for (StepProxy step :
-                steps
-        ) {
+        for (StepProxy step: steps) {
             step.onBeforeFlow(context);
         }
     }
 
     protected void callAfter(Context<C> context) throws ExecutionException {
-        for (StepProxy step :
-                steps
-        ) {
+        for (StepProxy step: steps) {
             step.onAfterFlow(context);
         }
     }
@@ -57,7 +62,7 @@ public abstract class FlowProxy<C, I, R> {
         step.onAfterStep(context);
     }
 
-
+    @Override
     public void verify() throws ValidationException {
         Class<?> configType = typing.getConfigType();
         List<ValidationError> errors = new ArrayList<>();
@@ -69,9 +74,9 @@ public abstract class FlowProxy<C, I, R> {
         });
 
         // TODO validate source generic type
-        if (!Typing.isInputTypeCompatible(steps.get(0).getTyping().getInputType(), typing)
-                && (!(this instanceof NestedSerialFlow && typing.getInputType().equals(Source.class)))
-                && (!(this instanceof NestedConcurrentFlow && typing.getInputType().equals(Source.class)))) {
+        if (!Typing.isInputTypeCompatible(steps.get(0).getTyping().getInputType(),
+            typing) && (!(this instanceof NestedSerialFlow && typing.getInputType()
+            .equals(Source.class))) && (!(this instanceof NestedConcurrentFlow && typing.getInputType().equals(Source.class)))) {
             errors.add(new ValidationError(ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE, steps.get(0).getIdentifier()));
         }
 
@@ -80,12 +85,13 @@ public abstract class FlowProxy<C, I, R> {
         verifyReturnStep(errors);
 
         if (!errors.isEmpty()) {
-            throw new ValidationException("Flow verification failed with errors: " + errors.stream().map(ValidationError::getType).toList(), errors);
+            throw new ValidationException(errors);
         }
     }
 
     private void verifyReturnStep(List<ValidationError> errors) {
-        if (!(this instanceof NestedConcurrentFlow) && !(this instanceof NestedSerialFlow) && !Typing.isReturnTypeCompatible(typing.getReturnType(), steps.get(steps.size() - 1).getTyping())) {
+        if (!(this instanceof NestedConcurrentFlow) && !(this instanceof NestedSerialFlow) && !Typing.isReturnTypeCompatible(
+            typing.getReturnType(), steps.get(steps.size() - 1).getTyping())) {
             errors.add(new ValidationError(ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE, steps.get(steps.size() - 1).getIdentifier()));
         }
     }
@@ -98,29 +104,17 @@ public abstract class FlowProxy<C, I, R> {
             StepProxy next = iterator.next();
 
             if (!Typing.isInputTypeCompatible(current.getTyping(), next.getTyping())) {
-                errors.add(new ValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
+                errors.add(
+                    new ValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
             }
 
-            verifyNestedFlow(errors, current);
+            verifyWhenVerifiable(errors, current);
 
             current = next;
         }
 
-        verifyNestedFlow(errors, current);
+        verifyWhenVerifiable(errors, current);
     }
-
-    private static void verifyNestedFlow(List<ValidationError> errors, StepProxy current) {
-        try {
-            if (current instanceof NestedConcurrentFlow) {
-                ((NestedConcurrentFlow) current).verify();
-            } else if (current instanceof NestedSerialFlow) {
-                ((NestedSerialFlow) current).verify();
-            }
-        } catch (ValidationException e) {
-            errors.addAll(e.getErrors());
-        }
-    }
-
 
     protected Result<R> invokeSingleItem(Context<C> context, I input) throws ExecutionException {
         Object data = input;
@@ -132,7 +126,8 @@ public abstract class FlowProxy<C, I, R> {
                 callBefore(subContext, current);
                 //TODO document this behaviour
                 if (subContext.isAbort()) {
-                    this.logger.log(Level.FINE, String.format("Aborted for input %s by step %s in @Before handler", input, current.getIdentifier()));
+                    this.logger.log(Level.FINE,
+                        String.format("Aborted for input %s by step %s in @Before handler", input, current.getIdentifier()));
                     return new Result<R>(Result.Type.ABORTED);
                 }
 
@@ -146,7 +141,7 @@ public abstract class FlowProxy<C, I, R> {
                 return new Result<R>(Result.Type.ABORTED);
             }
         }
-        return new Result<>((R) data, Result.Type.SUCCEEDED);
+        return new Result<>((R)data, Result.Type.SUCCEEDED);
     }
 
     public List<StepProxy> getSteps() {

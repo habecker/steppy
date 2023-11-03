@@ -9,17 +9,17 @@ import java.util.stream.Stream;
 
 import static java.util.Collections.emptyIterator;
 
-class SimpleSource<T> implements Source<T> {
+public class SimpleSource<T> implements Source<T> {
+    private final List<Throwable> failures = new ArrayList<>();
+
     private Iterator<T> source;
-
-    public List<Throwable> getFailures() {
-        return failures;
-    }
-
-    private List<Throwable> failures = new ArrayList<>();
 
     public SimpleSource(Stream<T> source) {
         this.source = source.iterator();
+    }
+
+    public List<Throwable> getFailures() {
+        return failures;
     }
 
     @Override

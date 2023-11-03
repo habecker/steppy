@@ -2,6 +2,7 @@ package de.y2g.steppy.api;
 
 public final class Variable<T> {
     private final String name;
+
     private final Scope scope;
 
     public Variable(Scope scope, String name) {

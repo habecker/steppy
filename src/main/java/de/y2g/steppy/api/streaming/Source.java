@@ -1,7 +1,6 @@
 package de.y2g.steppy.api.streaming;
 
 import java.time.Duration;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface Source<I> {

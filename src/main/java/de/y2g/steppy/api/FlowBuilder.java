@@ -17,15 +17,22 @@ import java.util.concurrent.Executor;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public final class FlowBuilder<C, I, R> {
     private final Executor executor;
+
     private final StepRepository repository;
+
     private final Class<C> configType;
+
     private final Class<I> inputType;
-    private Class<R> returnType;
+
     private final List<StepProxy> steps = new LinkedList<>();
+
+    private Class<R> returnType;
+
     private boolean concurrent = false;
+
     private BiPredicate<Context<C>, R> repetitionPredicate;
 
     public FlowBuilder(Executor executor, StepRepository repository, Class<C> configType, Class<I> inputType, Class<R> returnType) {
@@ -85,10 +92,10 @@ public final class FlowBuilder<C, I, R> {
         Flow<C, I, R> flow;
         if (concurrent) {
             flow = new ConcurrentFlowProxy<>(new Typing<>(configType, inputType, returnType), steps, executor);
-            ((ConcurrentFlowProxy) flow).verify();
+            ((ConcurrentFlowProxy)flow).verify();
         } else {
             flow = new SerialFlowProxy<>(new Typing<>(configType, inputType, returnType), steps);
-            ((SerialFlowProxy) flow).verify();
+            ((SerialFlowProxy)flow).verify();
         }
         return flow;
     }

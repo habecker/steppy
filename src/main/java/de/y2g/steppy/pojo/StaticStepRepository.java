@@ -8,19 +8,19 @@ import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class StaticStepRepository extends de.y2g.steppy.api.StepRepository {
+    private static final Map<String, Step> steps = new HashMap<>();
+
     private static StaticStepRepository repository = null;
+
+    private StaticStepRepository() {
+        super();
+    }
 
     protected static StaticStepRepository instance() {
         if (repository == null)
             repository = new StaticStepRepository();
         return repository;
     }
-
-    private StaticStepRepository() {
-        super();
-    }
-
-    private static final Map<String, Step> steps = new HashMap<>();
 
     public static void register(String name, Step step) {
         steps.put(name, step);
@@ -29,7 +29,7 @@ public class StaticStepRepository extends de.y2g.steppy.api.StepRepository {
 
     @SafeVarargs
     public static void register(Class<? extends Step>... stepType) {
-        for (Class<? extends Step> type : stepType) {
+        for (Class<? extends Step> type: stepType) {
             register(type);
         }
     }

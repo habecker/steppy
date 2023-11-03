@@ -6,8 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ValidationError {
-    private ValidationErrorType type;
-    private StepIdentifier[] steps;
+    private final ValidationErrorType type;
+
+    private final StepIdentifier[] steps;
 
     public ValidationError(ValidationErrorType type, StepIdentifier... steps) {
         this.type = type;

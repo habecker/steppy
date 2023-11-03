@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpringStepRepository extends StepRepository {
 
-
     private final AutowireCapableBeanFactory context;
 
     @Autowired

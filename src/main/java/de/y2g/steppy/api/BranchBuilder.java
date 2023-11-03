@@ -10,12 +10,18 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 public class BranchBuilder<C, I, R> {
-    List<BranchedFlowProxy.PredicatedFlow<C, I, R>> flows;
     private final StepRepository repository;
+
     private final Class<C> configType;
+
     private final Class<I> inputType;
+
     private final Class<R> returnType;
+
     private final Executor executor;
+
+    List<BranchedFlowProxy.PredicatedFlow<C, I, R>> flows;
+
     private boolean otherwiseContinue;
 
     BranchBuilder(Executor executor, StepRepository repository, Class<C> configType, Class<I> inputType, Class<R> returnType) {
@@ -30,14 +36,14 @@ public class BranchBuilder<C, I, R> {
     public BranchBuilder<C, I, R> when(BiPredicate<Context<C>, I> predicate, Consumer<FlowBuilder<C, I, R>> consumer) {
         FlowBuilder<C, I, R> builder = new FlowBuilder<>(executor, repository, configType, inputType, returnType);
         consumer.accept(builder);
-        flows.add(new BranchedFlowProxy.PredicatedFlow<C, I, R>(predicate, builder.buildBranched()));
+        flows.add(new BranchedFlowProxy.PredicatedFlow<>(predicate, builder.buildBranched()));
         return this;
     }
 
     public BranchBuilder<C, I, R> otherwise(Consumer<FlowBuilder<C, I, R>> consumer) {
         FlowBuilder<C, I, R> builder = new FlowBuilder<>(executor, repository, configType, inputType, returnType);
         consumer.accept(builder);
-        flows.add(new BranchedFlowProxy.PredicatedFlow<C, I, R>(builder.buildBranched()));
+        flows.add(new BranchedFlowProxy.PredicatedFlow<>(builder.buildBranched()));
         return this;
     }
 

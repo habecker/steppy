@@ -1,7 +1,7 @@
 package de.y2g.steppy.api.streaming;
 
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.exception.ExecutionException;
 

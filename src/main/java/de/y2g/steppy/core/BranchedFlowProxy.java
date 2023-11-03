@@ -2,17 +2,23 @@ package de.y2g.steppy.core;
 
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.exception.ExecutionException;
+import de.y2g.steppy.api.validation.ValidationException;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 
 // TODO: veriy otherwise continue
-public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
+@SuppressWarnings("unchecked")
+public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R>, Verifiable {
+
     private final Typing<C, I, R> stepTyping;
+
     private final List<PredicatedFlow<C, I, R>> flows;
+
     private final boolean otherwiseContinue;
+
+    private final UUID uuid = UUID.randomUUID();
 
     public BranchedFlowProxy(List<PredicatedFlow<C, I, R>> flows, boolean otherwiseContinue) {
         // TODO throw exception if flows is empty
@@ -23,14 +29,14 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
 
     @Override
     public void onBeforeFlow(Context<C> context) throws ExecutionException {
-        for (var flow : flows) {
+        for (var flow: flows) {
             flow.flow.callBefore(context);
         }
     }
 
     @Override
     public void onAfterFlow(Context<C> context) throws ExecutionException {
-        for (var flow : flows) {
+        for (var flow: flows) {
             flow.flow.callAfter(context);
         }
     }
@@ -46,7 +52,7 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
     }
 
     @Override
-    public Typing getTyping() {
+    public Typing<C, I, R> getTyping() {
         return stepTyping;
     }
 
@@ -55,13 +61,13 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
 
         var flow = flows.stream().filter(f -> f.predicate != null && f.predicate.test(context, input)).findFirst();
 
-        if (!flow.isPresent())
+        if (flow.isEmpty())
             flow = flows.stream().filter(f -> f.isElse).findFirst();
 
-        if (!flow.isPresent() && otherwiseContinue)
-            return (R) input;
+        if (flow.isEmpty() && otherwiseContinue)
+            return (R)input;
 
-        if (!flow.isPresent())
+        if (flow.isEmpty())
             throw new ExecutionException("No branch found with fulfilled predicate.");
 
         var flowInstance = flow.get().flow;
@@ -71,12 +77,20 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
 
     @Override
     public StepIdentifier getIdentifier() {
-        return new StepIdentifier(UUID.randomUUID() + "-nested-flow");
+        return new StepIdentifier(uuid + "-branched-flow");
     }
 
-    public static class PredicatedFlow<C, I, R> {
+    @Override
+    public void verify() throws ValidationException {
+        // TODO: verify that R assignable from I when otherwiseContinue
+        Verifiable.verifyAll(flows);
+    }
+
+    public static class PredicatedFlow<C, I, R> implements Verifiable {
         private final FlowProxy<C, I, R> flow;
+
         private BiPredicate<Context<C>, I> predicate;
+
         private boolean isElse;
 
         public PredicatedFlow(BiPredicate<Context<C>, I> predicate, FlowProxy<C, I, R> flow) {
@@ -87,6 +101,11 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R> {
         public PredicatedFlow(FlowProxy<C, I, R> flow) {
             this.flow = flow;
             isElse = true;
+        }
+
+        @Override
+        public void verify() throws ValidationException {
+            flow.verify();
         }
     }
 }

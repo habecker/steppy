@@ -15,9 +15,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
@@ -102,8 +101,7 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
                 Class<Variable> type = (Class<Variable>)field.getType();
                 try {
                     // TODO: document behaviour
-                    Variable variable = type.getConstructor(Scope.class, String.class)
-                        .newInstance(state.scope(), fieldName);
+                    Variable variable = type.getConstructor(Scope.class, String.class).newInstance(state.scope(), fieldName);
                     boolean isAccessible = field.canAccess(delegate);
                     field.setAccessible(true);
                     field.set(delegate, variable);
@@ -117,6 +115,8 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     }
 
     private static ParameterizedType findParameterizedStepType(final Class<?> clazz) {
+        Objects.requireNonNull(clazz, "Class must not be null.");
+
         Class<?> current = clazz;
         ParameterizedType type = getParameterizedStepType(current);
         while (current != null && type == null) {
@@ -124,7 +124,7 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
             type = getParameterizedStepType(current);
         }
         if (type == null)
-            throw new IllegalArgumentException("Step does not implement parameterized step interface.");
+            throw new IllegalArgumentException("Step " + clazz.getCanonicalName() + " does not implement parameterized step interface.");
         return type;
     }
 
@@ -178,16 +178,16 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
         try {
             for (Method method: methods) {
                 method.setAccessible(true);
-                if (method.getParameterCount() == 0){
+                if (method.getParameterCount() == 0) {
                     method.invoke(delegate);
                 } else {
                     method.invoke(delegate, context);
                 }
             }
         } catch (InvocationTargetException e) {
-            throw new ExecutionException("An unknown error occured during lifecycle callbacks.", e.getTargetException());
+            throw new ExecutionException("An unknown error occurred during lifecycle callbacks.", e.getTargetException());
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("An internal error occured during lifecycle callbacks.", e);
+            throw new IllegalStateException("An internal error occurred during lifecycle callbacks.", e);
         }
     }
 

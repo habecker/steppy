@@ -89,7 +89,8 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                 try {
                     callBefore(context);
                 } catch (ExecutionException e) {
-                    logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                    logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
+                    return;
                 }
 
                 while (source.isActive()) {
@@ -115,7 +116,6 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                                     if (e instanceof RuntimeException) {
                                         // TODO document exception behaviour
                                         source.close();
-                                        return new Result<>(Result.Type.FAILED, e);
                                     }
                                     return new Result<>(Result.Type.FAILED, e);
                                 }
@@ -126,7 +126,7 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                         }
 
                     } catch (InterruptedException e) {
-                        logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                        logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
                         break;
                     }
                 }
@@ -134,7 +134,7 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
                 try {
                     callAfter(context);
                 } catch (ExecutionException e) {
-                    logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                    logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
                 }
             }
 

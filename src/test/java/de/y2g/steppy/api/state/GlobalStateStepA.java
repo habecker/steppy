@@ -1,7 +1,7 @@
 package de.y2g.steppy.api.state;
 
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;

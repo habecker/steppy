@@ -3,8 +3,6 @@ package de.y2g.steppy.core;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.exception.ExecutionException;
 
-import java.util.List;
-
 public interface StepProxy<C, I, R> {
     Typing<C, I, R> getTyping();
 

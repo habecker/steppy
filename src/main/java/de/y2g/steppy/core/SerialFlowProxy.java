@@ -12,11 +12,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
 
     public SerialFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
@@ -30,8 +29,7 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
         try {
             callBefore(context);
 
-
-            for (I input : inputs) {
+            for (I input: inputs) {
                 try {
                     Result<R> data = invokeSingleItem(context, input);
                     result.add(data);
@@ -48,7 +46,9 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
 
     @Override
     public void stream(C configuration, Source<I> source, Sink<R> sink) throws ExecutionException {
-        Logger logger = Logger.getLogger(String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(), getTyping().getReturnType().getSimpleName()));
+        Logger logger = Logger.getLogger(
+            String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
+                getTyping().getReturnType().getSimpleName()));
         var context = new Context<>(configuration);
         try {
             callBefore(context);
@@ -68,7 +68,7 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
                     }
 
                 } catch (InterruptedException e) {
-                    logger.log(Level.SEVERE, "Error occured during flow-streaming: " + e.getMessage(), e);
+                    logger.log(Level.SEVERE, "Error occurred during flow-streaming: " + e.getMessage(), e);
                     break;
                 }
             }

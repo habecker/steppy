@@ -24,23 +24,15 @@ class StateFlowTest {
 
     @Test
     void testLocalState() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class)
-            .append(StateStep.class)
-            .append(StateStep.class)
-            .append(StateStep.class)
-            .append(StateStep.class)
-            .build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(1 );
+        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class).append(StateStep.class)
+            .append(StateStep.class).append(StateStep.class).append(StateStep.class).build();
+        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(1);
     }
 
     @Test
     void testGlobalState() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class)
-            .append(GlobalStateStepA.class)
-            .append(GlobalStateStepA.class)
-            .append(GlobalStateStepB.class)
-            .append(GlobalStateStepB.class)
-            .build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(5 );
+        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class).append(GlobalStateStepA.class)
+            .append(GlobalStateStepA.class).append(GlobalStateStepB.class).append(GlobalStateStepB.class).build();
+        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(5);
     }
 }

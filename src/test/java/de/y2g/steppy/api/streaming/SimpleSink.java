@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-class SimpleSink<T> implements Sink<T> {
+public class SimpleSink<T> implements Sink<T> {
+    final Semaphore semaphore = new Semaphore(0);
+
     private final List<T> result = new ArrayList<>();
 
-    final Semaphore semaphore = new Semaphore(0);
+    private boolean closed;
 
     @Override
     public void close() {
         semaphore.release();
+        closed = true;
     }
 
     @Override
@@ -25,5 +28,9 @@ class SimpleSink<T> implements Sink<T> {
 
     public List<T> getResult() {
         return result;
+    }
+
+    public boolean isClosed() {
+        return closed;
     }
 }

@@ -1,27 +1,17 @@
 package de.y2g.steppy.core;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class Typing<C, I, R> {
     private final Class<C> configType;
+
     private final Class<I> inputType;
+
     private final Class<R> returnType;
 
     public Typing(Class<C> configType, Class<I> inputType, Class<R> returnType) {
         this.configType = configType;
         this.inputType = inputType;
         this.returnType = returnType;
-    }
-
-    public Class<C> getConfigType() {
-        return configType;
-    }
-
-    public Class<I> getInputType() {
-        return inputType;
-    }
-
-    public Class<R> getReturnType() {
-        return returnType;
     }
 
     public static boolean isInputTypeCompatible(Typing current, Typing successor) {
@@ -40,5 +30,16 @@ public class Typing<C, I, R> {
         return a.getConfigType().isAssignableFrom(configType);
     }
 
+    public Class<C> getConfigType() {
+        return configType;
+    }
+
+    public Class<I> getInputType() {
+        return inputType;
+    }
+
+    public Class<R> getReturnType() {
+        return returnType;
+    }
 
 }
