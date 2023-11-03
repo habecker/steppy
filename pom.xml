@@ -4,7 +4,7 @@
 
     <groupId>de.y2g</groupId>
     <artifactId>steppy</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -15,7 +15,7 @@
     <scm>
         <url>https://git.y2g.de/habecker/steppy.git</url>
         <connection>scm:git:ssh://git@git.y2g.de/habecker/steppy.git</connection>
-        <tag>steppy-0.2.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencies>
