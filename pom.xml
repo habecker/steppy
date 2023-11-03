@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.y2g</groupId>
     <artifactId>steppy</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.1</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -16,7 +15,7 @@
     <scm>
         <url>https://git.y2g.de/habecker/steppy.git</url>
         <connection>scm:git:ssh://git@git.y2g.de/habecker/steppy.git</connection>
-        <tag>HEAD</tag>
+        <tag>steppy-0.2.1</tag>
     </scm>
 
     <dependencies>
