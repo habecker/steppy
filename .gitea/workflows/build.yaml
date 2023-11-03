@@ -1,5 +1,5 @@
 name: Build
-on: [push]
+on: [ push ]
 
 jobs:
   build:
@@ -27,19 +27,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.10.0
-      with:
-        java-version: 21
-        java-distribution: temurin
-        maven-version: 3.9.4
-# Until https://github.com/go-gitea/gitea/issues/27415 is resolved
-#    - uses: actions/download-artifact@v2
-#      with:
-#        name: build
-    - name: Test
-      run: mvn --batch-mode --update-snapshots verify
+      - uses: actions/checkout@v4
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.10.0
+        with:
+          java-version: 21
+          java-distribution: temurin
+          maven-version: 3.9.4
+      # Until https://github.com/go-gitea/gitea/issues/27415 is resolved
+      #    - uses: actions/download-artifact@v2
+      #      with:
+      #        name: build
+      - name: Test
+        run: mvn --batch-mode --update-snapshots verify
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -69,8 +69,8 @@ jobs:
                 }
             }]
       # Until https://github.com/go-gitea/gitea/issues/27415 is resolved
-#     - uses: actions/download-artifact@v2
-#       with:
-#         name: build
+      #     - uses: actions/download-artifact@v2
+      #       with:
+      #         name: build
       - name: Deploy
-        run: mvn --batch-mode deploy -DskipTests -Durl=$GITEA_URL/api/packages/habecker/maven -DrepositoryId=gitea
+        run: mvn --batch-mode javadoc:jar source:jar deploy -DskipTests -Durl=$GITEA_URL/api/packages/habecker/maven -DrepositoryId=gitea
