@@ -14,15 +14,10 @@ jobs:
           maven-version: 3.9.4
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package -DskipTests
-      - run: mkdir steppy/ && cp target/steppy-*.jar steppy/ && tar -czvf steppy.tar.gz steppy/
-      - uses: actions/upload-artifact@v3
-        with:
-          name: steppy.zip
-          path: steppy.zip
-      - uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: target/
+      #- uses: actions/upload-artifact@v3
+      #  with:
+      #    name: build
+      #    path: target/
   test:
     needs: build
     runs-on: ubuntu-latest
