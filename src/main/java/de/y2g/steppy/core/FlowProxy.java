@@ -44,13 +44,13 @@ public abstract class FlowProxy<C, I, R> implements Verifiable {
 
     protected void callBefore(Context<C> context) throws ExecutionException {
         for (StepProxy step: steps) {
-            step.onBeforeFlow(context);
+            step.onBeforeFlow(context.sub(System.identityHashCode(step) + ""));
         }
     }
 
     protected void callAfter(Context<C> context) throws ExecutionException {
         for (StepProxy step: steps) {
-            step.onAfterFlow(context);
+            step.onAfterFlow(context.sub(System.identityHashCode(step) + ""));
         }
     }
 

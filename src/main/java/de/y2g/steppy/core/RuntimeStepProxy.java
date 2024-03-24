@@ -101,7 +101,7 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
                 Class<Variable> type = (Class<Variable>)field.getType();
                 try {
                     // TODO: document behaviour
-                    Variable variable = type.getConstructor(Scope.class, String.class).newInstance(state.scope(), fieldName);
+                    Variable variable = type.getDeclaredConstructor(Scope.class, String.class).newInstance(state.scope(), fieldName);
                     boolean isAccessible = field.canAccess(delegate);
                     field.setAccessible(true);
                     field.set(delegate, variable);
@@ -123,8 +123,9 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
             current = current.getSuperclass();
             type = getParameterizedStepType(current);
         }
-        if (type == null)
+        if (type == null) {
             throw new IllegalArgumentException("Step " + clazz.getCanonicalName() + " does not implement parameterized step interface.");
+        }
         return type;
     }
 
