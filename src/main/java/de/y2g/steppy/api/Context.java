@@ -33,6 +33,8 @@ public final class Context<C> {
     public C getConfiguration() {
         if (Configurations.class.isAssignableFrom(configurationType)) {
             return (C)configurations;
+        } else if (configurationType.isAssignableFrom(Object.class) || None.class.isAssignableFrom(configurationType)) {
+            return (C)None.value();
         }
 
         return configurations.get(configurationType);
