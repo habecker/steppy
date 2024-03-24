@@ -20,7 +20,7 @@ public class SpringFlowBuilderFactory implements FlowBuilderFactory {
     }
 
     @Override
-    public <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
-        return new FlowBuilder<>(flowTaskExecutor, stepRepository, configType, inputType, returnType);
+    public <I, R> FlowBuilder<I, R> builder(Class<I> inputType, Class<R> returnType) {
+        return new FlowBuilder<>(flowTaskExecutor, stepRepository, inputType, returnType);
     }
 }

@@ -3,7 +3,6 @@ package de.y2g.steppy.api.validation;
 import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
 import de.y2g.steppy.api.IncrementerStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
 import de.y2g.steppy.pojo.StaticStepRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -29,7 +28,7 @@ class FlowValidationTest {
     @ValueSource(booleans = { true, false })
     void missingTypeParams(boolean concurrent) {
         StaticStepRepository.register(StepWithNoTypes.class);
-        final var builder = StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class);
+        final var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -41,7 +40,7 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void incompatibleIntermediate(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class);
+        final var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -56,7 +55,7 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void incompatibleReturnType(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class);
+        final var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -69,22 +68,8 @@ class FlowValidationTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
-    void incompatibleConfigType(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(Integer.class, String.class, String.class);
-        if (concurrent) {
-            builder.concurrent();
-        }
-        assertThatExceptionOfType(ValidationException.class).isThrownBy(() -> builder.append(AppendAStep.class).build())
-            .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
-            .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE,
-                "Must be of type CONFIGURATION_TYPE_INCOMPATIBLE")
-            .matches(e -> e.getErrors().get(0).getSteps().equals(List.of(AppendAStep.class.getCanonicalName())));
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = { true, false })
     void incompatibleFlowInputType(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, Integer.class, String.class);
+        final var builder = StaticFlowBuilderFactory.builder(Integer.class, String.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -98,7 +83,7 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void nestedFlowReturn(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class);
+        final var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -113,7 +98,7 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void nestedFlow(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, Integer.class, String.class);
+        final var builder = StaticFlowBuilderFactory.builder(Integer.class, String.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -128,13 +113,13 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void branchedFlow(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, Integer.class, String.class);
+        final var builder = StaticFlowBuilderFactory.builder(Integer.class, String.class);
         if (concurrent) {
             builder.concurrent();
         }
         assertThatExceptionOfType(ValidationException.class).isThrownBy(
-                () -> builder.branch(Integer.class, String.class, b -> b.when((context, s) -> true, bb -> bb.append(AppendAStep.class)))
-                    .build()).matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
+                () -> builder.branch(Integer.class, String.class, b -> b.when((s) -> true, bb -> bb.append(AppendAStep.class))).build())
+            .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE,
                 "Must be of type FLOW_INPUT_TYPE_INCOMPATIBLE")
             .matches(e -> e.getErrors().get(0).getSteps().equals(List.of(AppendAStep.class.getCanonicalName())));
@@ -143,12 +128,12 @@ class FlowValidationTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void branchedFlowReturn(boolean concurrent) {
-        final var builder = StaticFlowBuilderFactory.builder(None.class, String.class, Integer.class);
+        final var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
         if (concurrent) {
             builder.concurrent();
         }
         assertThatExceptionOfType(ValidationException.class).isThrownBy(
-                () -> builder.branch(String.class, String.class, b -> b.when((context, s) -> true, bb -> bb.append(AppendAStep.class))).build())
+                () -> builder.branch(String.class, String.class, b -> b.when((s) -> true, bb -> bb.append(AppendAStep.class))).build())
             .matches(e -> e.getErrors().size() == 1, "Must have exactly one error")
             .matches(e -> e.getErrors().get(0).getType() == ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE,
                 "Must be of type FLOW_RETURN_TYPE_INCOMPATIBLE")

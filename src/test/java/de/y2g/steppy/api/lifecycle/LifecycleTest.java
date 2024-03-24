@@ -32,8 +32,8 @@ class LifecycleTest {
     void testSequential() throws ExecutionException, ValidationException {
         AtomicReference<String> result = new AtomicReference<>();
         StaticStepRepository.register("lifecycle", new LifecycleStep(result::set));
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("lifecycle").append("lifecycle").build();
-        flow.invoke(None.value(), None.value());
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class).append("lifecycle").append("lifecycle").build();
+        flow.invoke(None.value());
 
         assertThat(result.get()).isEqualTo("before-flow,before-flow,before-step,after-step,before-step,after-step,after-flow,after-flow");
     }
@@ -42,9 +42,8 @@ class LifecycleTest {
     void testConcurrent() throws ExecutionException, ValidationException {
         AtomicReference<String> result = new AtomicReference<>();
         StaticStepRepository.register("lifecycle", new LifecycleStep(result::set));
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("lifecycle").append("lifecycle").concurrent()
-            .build();
-        flow.invoke(None.value(), None.value());
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class).append("lifecycle").append("lifecycle").concurrent().build();
+        flow.invoke(None.value());
 
         assertThat(result.get()).isEqualTo("before-flow,before-flow,before-step,after-step,before-step,after-step,after-flow,after-flow");
     }
@@ -66,8 +65,8 @@ class LifecycleTest {
         }
 
         StaticStepRepository.register("lifecycle-no-context", new LifecycleWithoutContext());
-        var flow = StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("lifecycle-no-context").build();
-        flow.invoke(None.value(), None.value());
+        var flow = StaticFlowBuilderFactory.builder(None.class, None.class).append("lifecycle-no-context").build();
+        flow.invoke(None.value());
         assertThat(LifecycleWithoutContext.beforeFlowCalled).isTrue();
     }
 

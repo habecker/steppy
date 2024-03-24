@@ -1,5 +1,6 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -17,47 +18,47 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NestedConcurrentFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, I, R> {
+public class NestedConcurrentFlow<I, R> extends FlowProxy<I, R> implements StepProxy<Configurations, I, R> {
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
 
-    private final Typing<C, I, R> stepTyping;
+    private final Typing<Configurations, I, R> stepTyping;
 
     private final UUID uuid = UUID.randomUUID();
 
-    public NestedConcurrentFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
+    public NestedConcurrentFlow(Typing<Configurations, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
         super(typing, steps);
         this.taskExecutor = (supplier, future) -> future.completeAsync(supplier, executor);
         stepTyping = typing;
     }
 
     @Override
-    public void onBeforeFlow(Context<C> context) throws ExecutionException {
+    public void onBeforeFlow(Context<Configurations> context) throws ExecutionException {
         callBefore(context);
     }
 
     @Override
-    public void onAfterFlow(Context<C> context) throws ExecutionException {
+    public void onAfterFlow(Context<Configurations> context) throws ExecutionException {
         callAfter(context);
     }
 
     @Override
-    public void onBeforeStep(Context<C> context) throws ExecutionException {
+    public void onBeforeStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
     @Override
-    public void onAfterStep(Context<C> context) throws ExecutionException {
+    public void onAfterStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
     @Override
-    public Typing<C, I, R> getTyping() {
+    public Typing<Configurations, I, R> getTyping() {
         return stepTyping;
     }
 
     @Override
-    public R execute(Context<C> context, I input) throws ExecutionException {
+    public R execute(Context<Configurations> context, I input) throws ExecutionException {
         Logger logger = Logger.getLogger(
             String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
                 getTyping().getReturnType().getSimpleName()));

@@ -3,7 +3,7 @@ package de.y2g.steppy.api.streaming;
 import java.time.Duration;
 import java.util.function.Consumer;
 
-class InfiniteSource<T> implements Source<T> {
+public class InfiniteSource<T> implements Source<T> {
     private final T source;
 
     private boolean closed;

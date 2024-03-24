@@ -52,7 +52,7 @@ class LifecycleErrorTest {
         throws ExecutionException, ValidationException, InterruptedException {
         StaticStepRepository.register(stepType);
 
-        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class, None.class);
+        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class);
         if (concurrent) {
             builder.concurrent();
         }
@@ -60,7 +60,7 @@ class LifecycleErrorTest {
         var flow = builder.append(stepType).build();
         var source = new SimpleSource<>(Stream.of(None.value()));
 
-        flow.stream(None.value(), source, new SimpleSink<>());
+        flow.stream(source, new SimpleSink<>());
 
         assertThat(source.getFailures()).hasSize(1);
         var failures = source.getFailures();
@@ -75,13 +75,13 @@ class LifecycleErrorTest {
         throws ExecutionException, ValidationException {
         StaticStepRepository.register(stepType);
 
-        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class, None.class);
+        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class);
         if (concurrent) {
             builder.concurrent();
         }
 
         var flow = builder.append(stepType).build();
-        var result = flow.invoke(None.value(), None.value());
+        var result = flow.invoke(None.value());
         assertThat(result.getType()).isEqualTo(FAILED);
         assertThat(result.getException()).hasMessageContaining("An unknown error");
         assertThat(result.getException()).hasCauseInstanceOf(IOException.class);
@@ -92,13 +92,13 @@ class LifecycleErrorTest {
     void testExceptionDuringLifecycleFlowStreamedConcurrent(Class<? extends Step> stepType) throws ExecutionException {
         StaticStepRepository.register(stepType);
 
-        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class, None.class);
+        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class);
         builder.concurrent();
 
         var flow = builder.append(stepType).build();
         var source = new SimpleSource<>(Stream.of(None.value()));
 
-        flow.stream(None.value(), source, new SimpleSink<>());
+        flow.stream(source, new SimpleSink<>());
 
         // REMARK: currently we don't have a handle to check if the exception is correctly logged. We expect the code to run through though
     }
@@ -109,12 +109,12 @@ class LifecycleErrorTest {
         throws ExecutionException, ValidationException, InterruptedException {
         StaticStepRepository.register(stepType);
 
-        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class, None.class);
+        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class);
 
         var flow = builder.append(stepType).build();
         var source = new SimpleSource<>(Stream.of(None.value()));
 
-        assertThatExceptionOfType(ExecutionException.class).isThrownBy(() -> flow.stream(None.value(), source, new SimpleSink<>()))
+        assertThatExceptionOfType(ExecutionException.class).isThrownBy(() -> flow.stream(source, new SimpleSink<>()))
             .withMessageContaining("An unknown error").withCauseInstanceOf(IOException.class);
     }
 
@@ -124,13 +124,13 @@ class LifecycleErrorTest {
         throws ExecutionException, ValidationException {
         StaticStepRepository.register(stepType);
 
-        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class, None.class);
+        final var builder = StaticFlowBuilderFactory.builder(None.class, None.class);
         if (concurrent) {
             builder.concurrent();
         }
 
         var flow = builder.append(stepType).build();
-        assertThatExceptionOfType(ExecutionException.class).isThrownBy(() -> flow.invoke(None.value(), None.value()))
+        assertThatExceptionOfType(ExecutionException.class).isThrownBy(() -> flow.invoke(None.value()))
             .withMessageContaining("An unknown error").withCauseInstanceOf(IOException.class);
     }
 

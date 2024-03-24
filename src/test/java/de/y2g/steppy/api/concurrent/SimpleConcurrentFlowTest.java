@@ -3,7 +3,6 @@ package de.y2g.steppy.api.concurrent;
 import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
 import de.y2g.steppy.api.FailStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -31,16 +30,16 @@ class SimpleConcurrentFlowTest {
 
     @Test
     void testSimple() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).concurrent().build();
-        assertThat(flow.invoke(None.value(), List.of("", "")).stream().map(Result::getResult)).isEqualTo(List.of("ABAB", "ABAB"));
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(AppendBStep.class)
+            .append(AppendAStep.class).append(AppendBStep.class).concurrent().build();
+        assertThat(flow.invoke(List.of("", "")).stream().map(Result::getResult)).isEqualTo(List.of("ABAB", "ABAB"));
     }
 
     @Test
     void testFailure() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class).append(FailStep.class)
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(FailStep.class)
             .concurrent().build();
-        var result = flow.invoke(None.value(), List.of(""));
+        var result = flow.invoke(List.of(""));
 
         assertThat(result).hasSize(1);
         var singleResult = result.stream().toList().get(0);
@@ -50,9 +49,9 @@ class SimpleConcurrentFlowTest {
 
     @Test
     void testRuntimeError() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(RuntimeErrorStep.class).concurrent().build();
-        var result = flow.invoke(None.value(), List.of(""));
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(RuntimeErrorStep.class)
+            .concurrent().build();
+        var result = flow.invoke(List.of(""));
 
         assertThat(result).hasSize(1);
         var singleResult = result.stream().toList().get(0);

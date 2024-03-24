@@ -5,7 +5,6 @@ import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
 import de.y2g.steppy.api.FailStep;
 import de.y2g.steppy.api.IncrementerStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -32,16 +31,15 @@ class SequentialFlowTest {
 
     @Test
     void testSequential() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(AppendBStep.class).append(AppendAStep.class).append(AppendBStep.class).build();
-        assertThat(flow.invoke(None.value(), "").getResult()).isEqualTo("ABAB");
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(AppendBStep.class)
+            .append(AppendAStep.class).append(AppendBStep.class).build();
+        assertThat(flow.invoke("").getResult()).isEqualTo("ABAB");
     }
 
     @Test
     void testFailure() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class).append(FailStep.class)
-            .build();
-        var result = flow.invoke(None.value(), List.of(""));
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(FailStep.class).build();
+        var result = flow.invoke(List.of(""));
 
         assertThat(result).hasSize(1);
         var singleResult = result.stream().toList().get(0);
@@ -51,24 +49,23 @@ class SequentialFlowTest {
 
     @Test
     void testRuntimeError() throws ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(RuntimeErrorStep.class).build();
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(RuntimeErrorStep.class)
+            .build();
         assertThatRuntimeException().isThrownBy(() -> {
-            flow.invoke(None.value(), List.of(""));
+            flow.invoke(List.of(""));
         }).withMessage("Oh no");
     }
 
     @Test
     void testAbort() throws ValidationException, ExecutionException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(AbortStep.class).build();
-        assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(AbortStep.class).build();
+        assertThat(flow.invoke("").getType()).isEqualTo(Result.Type.ABORTED);
     }
 
     @Test
     void testAbortBefore() throws ValidationException, ExecutionException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
-            .append(AbortBeforeStep.class).build();
-        assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class).append(AbortBeforeStep.class)
+            .build();
+        assertThat(flow.invoke("").getType()).isEqualTo(Result.Type.ABORTED);
     }
 }

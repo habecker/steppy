@@ -5,7 +5,6 @@ import de.y2g.steppy.api.AppendAStep;
 import de.y2g.steppy.api.AppendBStep;
 import de.y2g.steppy.api.FailStep;
 import de.y2g.steppy.api.IncrementerStep;
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.RuntimeErrorStep;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -36,17 +35,17 @@ class NestedConcurrentFlowTest {
 
     @Test
     void testSequential() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class)
             .nest(String.class, b -> b.append(AppendBStep.class).append(AppendAStep.class).concurrent()).build();
-        assertThat(flow.invoke(None.value(), "").getResult()).isEqualTo("ABA");
+        assertThat(flow.invoke("").getResult()).isEqualTo("ABA");
     }
 
     @Test
     void testFailure() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class)
             .nest(String.class, b -> b.append(AppendBStep.class).append(FailStep.class).concurrent()).build();
 
-        var result = flow.invoke(None.value(), List.of(""));
+        var result = flow.invoke(List.of(""));
 
         assertThat(result).hasSize(1);
         var singleResult = result.stream().toList().get(0);
@@ -56,17 +55,17 @@ class NestedConcurrentFlowTest {
 
     @Test
     void testRuntimeError() throws ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class)
             .nest(String.class, b -> b.append(AppendBStep.class).append(RuntimeErrorStep.class).concurrent()).build();
         assertThatRuntimeException().isThrownBy(() -> {
-            flow.invoke(None.value(), List.of(""));
+            flow.invoke(List.of(""));
         }).withMessage("Oh no");
     }
 
     @Test
     void testAbort() throws ValidationException, ExecutionException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, String.class, String.class).append(AppendAStep.class)
+        var flow = StaticFlowBuilderFactory.builder(String.class, String.class).append(AppendAStep.class)
             .nest(String.class, b -> b.append(AppendBStep.class).append(AbortStep.class).concurrent()).build();
-        assertThat(flow.invoke(None.value(), "").getType()).isEqualTo(Result.Type.ABORTED);
+        assertThat(flow.invoke("").getType()).isEqualTo(Result.Type.ABORTED);
     }
 }

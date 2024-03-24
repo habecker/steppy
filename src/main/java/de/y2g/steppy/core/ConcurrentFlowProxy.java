@@ -1,9 +1,11 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Flow;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
+import de.y2g.steppy.api.exception.MissingConfigurationException;
 import de.y2g.steppy.api.streaming.Sink;
 import de.y2g.steppy.api.streaming.Source;
 import jakarta.validation.constraints.NotNull;
@@ -22,13 +24,13 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
+public class ConcurrentFlowProxy<I, R> extends FlowProxy<I, R> implements Flow<I, R> {
 
     private final BiConsumer<Supplier<Result<R>>, CompletableFuture<Result<R>>> taskExecutor;
 
     private final Executor executor;
 
-    public ConcurrentFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
+    public ConcurrentFlowProxy(Typing<Configurations, I, R> typing, @NotNull List<StepProxy> steps, Executor executor) {
         super(typing, steps);
         this.taskExecutor = (supplier, future) -> {
             future.completeAsync(supplier, executor);
@@ -37,11 +39,13 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
     }
 
     @Override
-    public Collection<Result<R>> invoke(C configuration, Collection<I> inputs) throws ExecutionException {
+    public Collection<Result<R>> invoke(Configurations configurations, Collection<I> inputs) throws ExecutionException {
+        preprocessConfiguration(configurations);
+
         Logger logger = Logger.getLogger(
             String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
                 getTyping().getReturnType().getSimpleName()));
-        var context = new Context<>(configuration);
+        var context = new Context<>(configurations, Configurations.class);
         var asynchronousExecutions = new ArrayList<Supplier<Result<R>>>(inputs.size());
         Collection<Result<R>> result;
         try {
@@ -76,13 +80,20 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
     }
 
     @Override
-    public void stream(C configuration, Source<I> source, Sink<R> sink) {
+    public void stream(Configurations configurations, Source<I> source, Sink<R> sink) {
+        Logger logger = Logger.getLogger(
+            String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
+                getTyping().getReturnType().getSimpleName()));
+
+        try {
+            preprocessConfiguration(configurations);
+        } catch (MissingConfigurationException e) {
+            return;
+        }
+
         executor.execute(() -> {
-            Logger logger = Logger.getLogger(
-                String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
-                    getTyping().getReturnType().getSimpleName()));
             // replace Phase to maintain lang level 11
-            var context = new Context<>(configuration);
+            var context = new Context<>(configurations, Configurations.class);
 
             Phaser executions = new Phaser(0);
             try {
@@ -154,4 +165,5 @@ public class ConcurrentFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements 
             }
         });
     }
+
 }

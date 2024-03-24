@@ -23,8 +23,8 @@ public class StaticFlowBuilderFactory {
         instance = null;
     }
 
-    public static <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
-        return instance().builder(configType, inputType, returnType);
+    public static <C, I, R> FlowBuilder<I, R> builder(Class<I> inputType, Class<R> returnType) {
+        return instance().builder(inputType, returnType);
     }
 
     private static class PojoFlowBuilderFactory implements de.y2g.steppy.api.FlowBuilderFactory {
@@ -35,8 +35,8 @@ public class StaticFlowBuilderFactory {
         }
 
         @Override
-        public <C, I, R> FlowBuilder<C, I, R> builder(Class<C> configType, Class<I> inputType, Class<R> returnType) {
-            return new FlowBuilder<>(executor, StaticStepRepository.instance(), configType, inputType, returnType);
+        public <I, R> FlowBuilder<I, R> builder(Class<I> inputType, Class<R> returnType) {
+            return new FlowBuilder<>(executor, StaticStepRepository.instance(), inputType, returnType);
         }
     }
 }

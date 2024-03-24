@@ -14,15 +14,15 @@ class StaticFlowBuilderFactoryTest {
     @Test
     void testMustInitializeFactory() {
         StaticFlowBuilderFactory.reset();
-        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(
-            () -> StaticFlowBuilderFactory.builder(None.class, None.class, None.class)).withMessageContaining("was not initialized");
+        assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> StaticFlowBuilderFactory.builder(None.class, None.class))
+            .withMessageContaining("was not initialized");
     }
 
     @Test
     void testinputTypeMissingStep() {
         StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-                () -> StaticFlowBuilderFactory.builder(None.class, None.class, None.class).append("does-not-exist").build())
+                () -> StaticFlowBuilderFactory.builder(None.class, None.class).append("does-not-exist").build())
             .withMessageContaining("Step with name does-not-exist was not found in the repository");
     }
 

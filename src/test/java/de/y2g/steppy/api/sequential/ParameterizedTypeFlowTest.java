@@ -1,5 +1,6 @@
 package de.y2g.steppy.api.sequential;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Step;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -33,8 +34,8 @@ public class ParameterizedTypeFlowTest {
 
     @Test
     void testSequential() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(Optional.class, Optional.class, Optional.class).append(SimpleStep.class).build();
-        var result = flow.invoke(Optional.of(1), Optional.of(2));
+        var flow = StaticFlowBuilderFactory.builder(Optional.class, Optional.class).append(SimpleStep.class).build();
+        var result = flow.invoke(Configurations.of(Optional.of(1)), Optional.of(2));
         assertThat((Optional<Integer>)result.getResult()).isEqualTo(Optional.of(3));
     }
 }

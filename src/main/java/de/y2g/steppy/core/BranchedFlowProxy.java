@@ -1,26 +1,27 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.ValidationException;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 // TODO: veriy otherwise continue
 @SuppressWarnings("unchecked")
-public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R>, Verifiable {
+public class BranchedFlowProxy<I, R> implements StepProxy<Configurations, I, R>, Verifiable {
 
-    private final Typing<C, I, R> stepTyping;
+    private final Typing<Configurations, I, R> stepTyping;
 
-    private final List<PredicatedFlow<C, I, R>> flows;
+    private final List<PredicatedFlow<I, R>> flows;
 
     private final boolean otherwiseContinue;
 
     private final UUID uuid = UUID.randomUUID();
 
-    public BranchedFlowProxy(List<PredicatedFlow<C, I, R>> flows, boolean otherwiseContinue) {
+    public BranchedFlowProxy(List<PredicatedFlow<I, R>> flows, boolean otherwiseContinue) {
         // TODO throw exception if flows is empty
         this.stepTyping = flows.get(0).flow.getTyping();
         this.flows = flows;
@@ -28,38 +29,38 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R>, Verifiabl
     }
 
     @Override
-    public void onBeforeFlow(Context<C> context) throws ExecutionException {
+    public void onBeforeFlow(Context<Configurations> context) throws ExecutionException {
         for (var flow: flows) {
             flow.flow.callBefore(context);
         }
     }
 
     @Override
-    public void onAfterFlow(Context<C> context) throws ExecutionException {
+    public void onAfterFlow(Context<Configurations> context) throws ExecutionException {
         for (var flow: flows) {
             flow.flow.callAfter(context);
         }
     }
 
     @Override
-    public void onBeforeStep(Context<C> context) throws ExecutionException {
+    public void onBeforeStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
     @Override
-    public void onAfterStep(Context<C> context) throws ExecutionException {
+    public void onAfterStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
     @Override
-    public Typing<C, I, R> getTyping() {
+    public Typing<Configurations, I, R> getTyping() {
         return stepTyping;
     }
 
     @Override
-    public R execute(Context<C> context, I input) throws ExecutionException {
+    public R execute(Context<Configurations> context, I input) throws ExecutionException {
 
-        var flow = flows.stream().filter(f -> f.predicate != null && f.predicate.test(context, input)).findFirst();
+        var flow = flows.stream().filter(f -> f.predicate != null && f.predicate.test(input)).findFirst();
 
         if (flow.isEmpty())
             flow = flows.stream().filter(f -> f.isElse).findFirst();
@@ -86,19 +87,19 @@ public class BranchedFlowProxy<C, I, R> implements StepProxy<C, I, R>, Verifiabl
         Verifiable.verifyAll(flows);
     }
 
-    public static class PredicatedFlow<C, I, R> implements Verifiable {
-        private final FlowProxy<C, I, R> flow;
+    public static class PredicatedFlow<I, R> implements Verifiable {
+        private final FlowProxy<I, R> flow;
 
-        private BiPredicate<Context<C>, I> predicate;
+        private Predicate<I> predicate;
 
         private boolean isElse;
 
-        public PredicatedFlow(BiPredicate<Context<C>, I> predicate, FlowProxy<C, I, R> flow) {
+        public PredicatedFlow(Predicate<I> predicate, FlowProxy<I, R> flow) {
             this.flow = flow;
             this.predicate = predicate;
         }
 
-        public PredicatedFlow(FlowProxy<C, I, R> flow) {
+        public PredicatedFlow(FlowProxy<I, R> flow) {
             this.flow = flow;
             isElse = true;
         }

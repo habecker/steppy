@@ -13,6 +13,6 @@ public class SpringFlowTest {
 
     @Test
     void mustExecuteFLow() throws ExecutionException {
-        flow.builder(None.class, None.class, None.class).append("noop").append(NoopStep.class).build().invoke(None.value());
+        flow.builder(None.class, None.class).append("noop").append(NoopStep.class).build().invoke(None.value());
     }
 }

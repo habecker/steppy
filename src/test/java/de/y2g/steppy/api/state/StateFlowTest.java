@@ -1,6 +1,5 @@
 package de.y2g.steppy.api.state;
 
-import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.ValidationException;
 import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
@@ -27,23 +26,23 @@ class StateFlowTest {
 
     @Test
     void testLocalState() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class).append(StateStep.class)
-            .append(StateStep.class).append(StateStep.class).append(StateStep.class).build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(1);
+        var flow = StaticFlowBuilderFactory.builder(Integer.class, Integer.class).append(StateStep.class).append(StateStep.class)
+            .append(StateStep.class).append(StateStep.class).build();
+        assertThat(flow.invoke(1).getResult()).isEqualTo(1);
     }
 
     @Test
     void testGlobalState() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class).append(GlobalStateStepA.class)
+        var flow = StaticFlowBuilderFactory.builder(Integer.class, Integer.class).append(GlobalStateStepA.class)
             .append(GlobalStateStepA.class).append(GlobalStateStepB.class).append(GlobalStateStepB.class).build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(5);
+        assertThat(flow.invoke(1).getResult()).isEqualTo(5);
     }
 
     @DisplayName("Test access to variable in different lifecycle states")
     @Test
     void testLifecycleState() throws ExecutionException, ValidationException {
-        var flow = StaticFlowBuilderFactory.builder(None.class, Integer.class, Integer.class).append(LifecycleStateStep.class).build();
-        assertThat(flow.invoke(None.value(), 1).getResult()).isEqualTo(100);
+        var flow = StaticFlowBuilderFactory.builder(Integer.class, Integer.class).append(LifecycleStateStep.class).build();
+        assertThat(flow.invoke(1).getResult()).isEqualTo(100);
         assertThat(LifecycleStateStep.values).containsExactly(100, 100, 100, 100, 100);
     }
 }

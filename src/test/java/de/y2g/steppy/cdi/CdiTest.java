@@ -21,6 +21,6 @@ public class CdiTest {
 
     @Test
     void mustExecuteFlow(FlowBuilderFactory flows) throws ExecutionException {
-        flows.builder(None.class, None.class, None.class).append("noop").append(NoopStep.class).build().invoke(None.value());
+        flows.builder(None.class, None.class).append("noop").append(NoopStep.class).build().invoke();
     }
 }

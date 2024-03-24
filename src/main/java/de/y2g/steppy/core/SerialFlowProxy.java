@@ -1,5 +1,6 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Flow;
 import de.y2g.steppy.api.Result;
@@ -16,15 +17,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow<C, I, R> {
+public class SerialFlowProxy<I, R> extends FlowProxy<I, R> implements Flow<I, R> {
 
-    public SerialFlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
+    public SerialFlowProxy(Typing<Configurations, I, R> typing, @NotNull List<StepProxy> steps) {
         super(typing, steps);
     }
 
     @Override
-    public Collection<Result<R>> invoke(C configuration, Collection<I> inputs) throws ExecutionException {
-        var context = new Context<>(configuration);
+    public Collection<Result<R>> invoke(Configurations configurations, Collection<I> inputs) throws ExecutionException {
+        preprocessConfiguration(configurations);
+
+        var context = new Context<>(configurations, Configurations.class);
         var result = new ArrayList<Result<R>>(inputs.size());
         try {
             callBefore(context);
@@ -45,11 +48,13 @@ public class SerialFlowProxy<C, I, R> extends FlowProxy<C, I, R> implements Flow
     }
 
     @Override
-    public void stream(C configuration, Source<I> source, Sink<R> sink) throws ExecutionException {
+    public void stream(Configurations configurations, Source<I> source, Sink<R> sink) throws ExecutionException {
+        preprocessConfiguration(configurations);
+
         Logger logger = Logger.getLogger(
             String.format("flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
                 getTyping().getReturnType().getSimpleName()));
-        var context = new Context<>(configuration);
+        var context = new Context<>(configurations, Configurations.class);
         try {
             callBefore(context);
 

@@ -5,30 +5,37 @@ import static de.y2g.steppy.api.Scope.FLOW;
 public final class Context<C> {
     private static final String GLOBAL_SCOPE = "global";
 
-    private final C configuration;
+    private final Configurations configurations;
 
     private final String scopeId;
 
     private final ExecutionState state;
 
+    private final Class<C> configurationType;
+
     private boolean abort = false;
 
-    public Context(C configuration) {
-        this(GLOBAL_SCOPE, configuration, new ExecutionState());
+    public Context(Configurations configurations, Class<C> configurationType) {
+        this(GLOBAL_SCOPE, configurations, new ExecutionState(), configurationType);
     }
 
-    private Context(String scopeId, Context<C> superior) {
-        this(scopeId, superior.configuration, superior.state);
+    private Context(String scopeId, Context<?> superior, Class<C> configurationType) {
+        this(scopeId, superior.configurations, superior.state, configurationType);
     }
 
-    Context(String scopeId, C configuration, ExecutionState state) {
+    Context(String scopeId, Configurations configurations, ExecutionState state, Class<C> configurationType) {
         this.scopeId = scopeId;
-        this.configuration = configuration;
+        this.configurations = configurations;
         this.state = state;
+        this.configurationType = configurationType;
     }
 
     public C getConfiguration() {
-        return configuration;
+        if (Configurations.class.isAssignableFrom(configurationType)) {
+            return (C)configurations;
+        }
+
+        return configurations.get(configurationType);
     }
 
     <T> T getState(String name, Scope scope) {
@@ -49,7 +56,7 @@ public final class Context<C> {
         return abort;
     }
 
-    public Context<C> sub(String scope) {
-        return new Context<>(scope, this);
+    public <D> Context<D> sub(String scope, Class<D> configurationType) {
+        return new Context<>(scope, this, configurationType);
     }
 }

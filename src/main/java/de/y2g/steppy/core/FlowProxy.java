@@ -1,14 +1,18 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.None;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
+import de.y2g.steppy.api.exception.MissingConfigurationException;
 import de.y2g.steppy.api.streaming.Source;
 import de.y2g.steppy.api.validation.ValidationError;
 import de.y2g.steppy.api.validation.ValidationErrorType;
 import de.y2g.steppy.api.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,14 +20,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public abstract class FlowProxy<C, I, R> implements Verifiable {
+public abstract class FlowProxy<I, R> implements Verifiable {
     private final Logger logger;
 
-    private final Typing<C, I, R> typing;
+    private final Typing<Configurations, I, R> typing;
 
     private final List<StepProxy> steps;
 
-    protected FlowProxy(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
+    protected FlowProxy(Typing<Configurations, I, R> typing, @NotNull List<StepProxy> steps) {
         // assert not empty
         this.typing = typing;
         this.steps = steps;
@@ -42,23 +46,23 @@ public abstract class FlowProxy<C, I, R> implements Verifiable {
         }
     }
 
-    protected void callBefore(Context<C> context) throws ExecutionException {
+    protected void callBefore(Context<Configurations> context) throws ExecutionException {
         for (StepProxy step: steps) {
-            step.onBeforeFlow(context.sub(System.identityHashCode(step) + ""));
+            step.onBeforeFlow(context.sub(System.identityHashCode(step) + "", step.getTyping().getConfigType()));
         }
     }
 
-    protected void callAfter(Context<C> context) throws ExecutionException {
+    protected void callAfter(Context<Configurations> context) throws ExecutionException {
         for (StepProxy step: steps) {
-            step.onAfterFlow(context.sub(System.identityHashCode(step) + ""));
+            step.onAfterFlow(context.sub(System.identityHashCode(step) + "", step.getTyping().getConfigType()));
         }
     }
 
-    protected void callBefore(Context<C> context, StepProxy step) throws ExecutionException {
+    protected void callBefore(Context<Configurations> context, StepProxy step) throws ExecutionException {
         step.onBeforeStep(context);
     }
 
-    protected void callAfter(Context<C> context, StepProxy step) throws ExecutionException {
+    protected void callAfter(Context<Configurations> context, StepProxy step) throws ExecutionException {
         step.onAfterStep(context);
     }
 
@@ -67,11 +71,11 @@ public abstract class FlowProxy<C, I, R> implements Verifiable {
         Class<?> configType = typing.getConfigType();
         List<ValidationError> errors = new ArrayList<>();
 
-        steps.forEach(step -> {
+        /*steps.forEach(step -> {
             if (!Typing.isConfigTypeCompatible(configType, step.getTyping())) {
                 errors.add(new ValidationError(ValidationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE, step.getIdentifier()));
             }
-        });
+        });*/
 
         // TODO validate source generic type
         if (!Typing.isInputTypeCompatible(steps.get(0).getTyping().getInputType(),
@@ -116,12 +120,12 @@ public abstract class FlowProxy<C, I, R> implements Verifiable {
         verifyWhenVerifiable(errors, current);
     }
 
-    protected Result<R> invokeSingleItem(Context<C> context, I input) throws ExecutionException {
+    protected Result<R> invokeSingleItem(Context<Configurations> context, I input) throws ExecutionException {
         Object data = input;
         LinkedList<StepProxy> steps = new LinkedList<>(getSteps());
         while (!steps.isEmpty()) {
             var current = steps.pop();
-            var subContext = context.sub(System.identityHashCode(current) + "");
+            var subContext = context.sub(System.identityHashCode(current) + "", current.getTyping().getConfigType());
             try {
                 callBefore(subContext, current);
                 //TODO document this behaviour
@@ -148,7 +152,36 @@ public abstract class FlowProxy<C, I, R> implements Verifiable {
         return steps;
     }
 
-    public Typing<C, I, R> getTyping() {
+    public Typing<Configurations, I, R> getTyping() {
         return typing;
+    }
+
+    private boolean addDefaultConfiguration(Configurations configurations, Class<?> configType) {
+        try {
+            var defaultConstructor = configType.getDeclaredConstructor();
+            defaultConstructor.setAccessible(true);
+            var defaultConfig = defaultConstructor.newInstance();
+            configurations.put(defaultConfig);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            logger.log(Level.SEVERE, "Error while adding default configuration", e);
+            return false;
+        }
+    }
+
+    protected final void preprocessConfiguration(Configurations configurations) throws MissingConfigurationException {
+        var missingConfigurations = new ArrayList<Class<?>>();
+        for (StepProxy step: steps) {
+            var configType = step.getTyping().getConfigType();
+            if (!None.class.isAssignableFrom(configType) && !configType.isAssignableFrom(Object.class) && !configType.equals(
+                Configurations.class) && !configurations.contains(configType) && !addDefaultConfiguration(configurations, configType)) {
+                missingConfigurations.add(step.getTyping().getConfigType());
+            }
+        }
+        if (!missingConfigurations.isEmpty()) {
+            throw new MissingConfigurationException("Missing configuration", missingConfigurations);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package de.y2g.steppy.core;
 
+import de.y2g.steppy.api.Configurations;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
@@ -12,33 +13,33 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements StepProxy<C, I, R> {
-    private final Typing<C, I, R> stepTyping;
+public class NestedSerialFlow<C, I, R> extends FlowProxy<I, R> implements StepProxy<Configurations, I, R> {
+    private final Typing<Configurations, I, R> stepTyping;
 
     private final UUID uuid = UUID.randomUUID();
 
-    public NestedSerialFlow(Typing<C, I, R> typing, @NotNull List<StepProxy> steps) {
+    public NestedSerialFlow(Typing<Configurations, I, R> typing, @NotNull List<StepProxy> steps) {
         super(typing, steps);
         stepTyping = typing;
     }
 
     @Override
-    public void onBeforeFlow(Context<C> context) throws ExecutionException {
+    public void onBeforeFlow(Context<Configurations> context) throws ExecutionException {
         callBefore(context);
     }
 
     @Override
-    public void onAfterFlow(Context<C> context) throws ExecutionException {
+    public void onAfterFlow(Context<Configurations> context) throws ExecutionException {
         callAfter(context);
     }
 
     @Override
-    public void onBeforeStep(Context<C> context) throws ExecutionException {
+    public void onBeforeStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
     @Override
-    public void onAfterStep(Context<C> context) throws ExecutionException {
+    public void onAfterStep(Context<Configurations> context) throws ExecutionException {
         // do nothing
     }
 
@@ -48,7 +49,7 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<C, I, R> implements Ste
     }
 
     @Override
-    public R execute(Context<C> context, I input) throws ExecutionException {
+    public R execute(Context<Configurations> context, I input) throws ExecutionException {
         Logger logger = Logger.getLogger(
             String.format("nested-flow-%s-%s-%s", getTyping().getConfigType().getSimpleName(), getTyping().getInputType().getSimpleName(),
                 getTyping().getReturnType().getSimpleName()));
