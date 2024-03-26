@@ -13,7 +13,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NestedSerialFlow<C, I, R> extends FlowProxy<I, R> implements StepProxy<Configurations, I, R> {
+public class NestedSerialFlow<I, R> extends FlowProxy<I, R> implements StepProxy<Configurations, I, R> {
     private final Typing<Configurations, I, R> stepTyping;
 
     private final UUID uuid = UUID.randomUUID();
@@ -103,4 +103,5 @@ public class NestedSerialFlow<C, I, R> extends FlowProxy<I, R> implements StepPr
     public StepIdentifier getIdentifier() {
         return new StepIdentifier(uuid + "-nested-flow");
     }
+
 }

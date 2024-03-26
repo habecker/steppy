@@ -54,7 +54,7 @@ public final class Context<C> {
         abort = true;
     }
 
-    public boolean isAbort() {
+    public boolean isAborted() {
         return abort;
     }
 

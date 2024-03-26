@@ -129,7 +129,7 @@ public abstract class FlowProxy<I, R> implements Verifiable {
             try {
                 callBefore(subContext, current);
                 //TODO document this behaviour
-                if (subContext.isAbort()) {
+                if (subContext.isAborted()) {
                     this.logger.log(Level.FINE,
                         String.format("Aborted for input %s by step %s in @Before handler", input, current.getIdentifier()));
                     return new Result<R>(Result.Type.ABORTED);
@@ -140,7 +140,7 @@ public abstract class FlowProxy<I, R> implements Verifiable {
             } finally {
                 callAfter(subContext, current);
             }
-            if (subContext.isAbort()) {
+            if (subContext.isAborted()) {
                 this.logger.log(Level.FINE, String.format("Aborted for input %s by step %s", input, current.getIdentifier()));
                 return new Result<R>(Result.Type.ABORTED);
             }

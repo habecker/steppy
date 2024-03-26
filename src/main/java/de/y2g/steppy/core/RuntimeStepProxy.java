@@ -2,6 +2,7 @@ package de.y2g.steppy.core;
 
 import de.y2g.steppy.api.After;
 import de.y2g.steppy.api.Before;
+import de.y2g.steppy.api.Consumes;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.State;
@@ -15,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
@@ -39,6 +41,8 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     private final List<Method> afterFlowMethods;
 
     private final Lock lock = new ReentrantLock();
+
+    private final List<Dependency> dependencies = new ArrayList<>();
 
     public RuntimeStepProxy(StepIdentifier identifier, Step<C, I, R> step) {
         this.identifier = identifier;
@@ -90,7 +94,7 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
 
         Field[] fields = delegate.getClass().getDeclaredFields();
         for (Field field: fields) {
-            State state = field.getAnnotation(State.class);
+            State state = ReflectionUtils.getAnnotation(field, State.class);
             if (state != null && field.getType().equals(Variable.class)) {
                 String fieldName = field.getName();
 
@@ -110,6 +114,11 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
                     NoSuchMethodException | SecurityException e) {
                     throw new IllegalStateException(e);
                 }
+            }
+
+            Consumes consumes = ReflectionUtils.getAnnotation(field, Consumes.class);
+            if (consumes != null) {
+                dependencies.add(new Dependency(consumes.name(), field.getType()));
             }
         }
     }
@@ -195,5 +204,9 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     @Override
     public StepIdentifier getIdentifier() {
         return identifier;
+    }
+
+    public List<Dependency> getDependencies() {
+        return dependencies;
     }
 }
