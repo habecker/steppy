@@ -5,9 +5,12 @@ import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.ValidationException;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 // TODO: veriy otherwise continue
 @SuppressWarnings("unchecked")
@@ -82,9 +85,39 @@ public class BranchedFlowProxy<I, R> implements StepProxy<Configurations, I, R>,
     }
 
     @Override
-    public void verify() throws ValidationException {
+    public Set<Dependency> getDependencies() {
+        Set<Dependency> dependencies = Collections.emptySet();
+        for (var flow: flows) {
+            Set<Dependency> flowDependencies = (Set<Dependency>)flow.flow.getSteps().stream()
+                .flatMap(step -> step.getDependencies().stream()).collect(Collectors.toSet());
+            if (dependencies.isEmpty()) {
+                dependencies = flowDependencies;
+            } else {
+                dependencies.retainAll(flowDependencies);
+            }
+        }
+        return Set.copyOf(dependencies);
+    }
+
+    @Override
+    public Set<Dependency> getFulfilledDependencies() {
+        Set<Dependency> dependencies = Collections.emptySet();
+        for (var flow: flows) {
+            Set<Dependency> flowDependencies = (Set<Dependency>)flow.flow.getSteps().stream()
+                .flatMap(step -> step.getFulfilledDependencies().stream()).collect(Collectors.toSet());
+            if (dependencies.isEmpty()) {
+                dependencies = flowDependencies;
+            } else {
+                dependencies.retainAll(flowDependencies);
+            }
+        }
+        return Set.copyOf(dependencies);
+    }
+
+    @Override
+    public void verify(List<Dependency> providedDependencies) throws ValidationException {
         // TODO: verify that R assignable from I when otherwiseContinue
-        Verifiable.verifyAll(flows);
+        Verifiable.verifyAll(flows, providedDependencies);
     }
 
     public static class PredicatedFlow<I, R> implements Verifiable {
@@ -105,8 +138,8 @@ public class BranchedFlowProxy<I, R> implements StepProxy<Configurations, I, R>,
         }
 
         @Override
-        public void verify() throws ValidationException {
-            flow.verify();
+        public void verify(List<Dependency> providedDependencies) throws ValidationException {
+            flow.verify(providedDependencies);
         }
     }
 }

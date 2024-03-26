@@ -9,9 +9,11 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class NestedSerialFlow<I, R> extends FlowProxy<I, R> implements StepProxy<Configurations, I, R> {
     private final Typing<Configurations, I, R> stepTyping;
@@ -102,6 +104,16 @@ public class NestedSerialFlow<I, R> extends FlowProxy<I, R> implements StepProxy
     @Override
     public StepIdentifier getIdentifier() {
         return new StepIdentifier(uuid + "-nested-flow");
+    }
+
+    @Override
+    public Set<Dependency> getDependencies() {
+        return (Set<Dependency>)getSteps().stream().flatMap(step -> step.getDependencies().stream()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Dependency> getFulfilledDependencies() {
+        return (Set<Dependency>)getSteps().stream().flatMap(step -> step.getFulfilledDependencies().stream()).collect(Collectors.toSet());
     }
 
 }

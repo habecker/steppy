@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface Verifiable {
-    static void verifyAll(List<? extends Verifiable> verifiables) throws ValidationException {
+    static void verifyAll(List<? extends Verifiable> verifiables, List<Dependency> providedDependencies) throws ValidationException {
         List<ValidationError> errors = new ArrayList<>();
 
         for (var verifiable: verifiables) {
             try {
-                verifiable.verify();
+                verifiable.verify(providedDependencies);
             } catch (ValidationException e) {
                 errors.addAll(e.getErrors());
             }
@@ -21,5 +21,5 @@ public interface Verifiable {
             throw new ValidationException(errors);
     }
 
-    void verify() throws ValidationException;
+    void verify(List<Dependency> providedDependencies) throws ValidationException;
 }

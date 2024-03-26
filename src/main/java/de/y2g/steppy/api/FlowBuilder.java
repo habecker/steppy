@@ -11,6 +11,7 @@ import de.y2g.steppy.core.StepIdentifier;
 import de.y2g.steppy.core.StepProxy;
 import de.y2g.steppy.core.Typing;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -86,10 +87,10 @@ public final class FlowBuilder<I, R> {
         Flow<I, R> flow;
         if (concurrent) {
             flow = new ConcurrentFlowProxy<>(new Typing<>(Configurations.class, inputType, returnType), steps, executor);
-            ((ConcurrentFlowProxy)flow).verify();
+            ((ConcurrentFlowProxy)flow).verify(new ArrayList<>());
         } else {
             flow = new SerialFlowProxy<>(new Typing<>(Configurations.class, inputType, returnType), steps);
-            ((SerialFlowProxy)flow).verify();
+            ((SerialFlowProxy)flow).verify(new ArrayList<>());
         }
         return flow;
     }

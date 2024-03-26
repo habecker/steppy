@@ -4,6 +4,7 @@ import de.y2g.steppy.api.After;
 import de.y2g.steppy.api.Before;
 import de.y2g.steppy.api.Consumes;
 import de.y2g.steppy.api.Context;
+import de.y2g.steppy.api.Provides;
 import de.y2g.steppy.api.Scope;
 import de.y2g.steppy.api.State;
 import de.y2g.steppy.api.Step;
@@ -19,6 +20,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
@@ -43,6 +45,8 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
     private final Lock lock = new ReentrantLock();
 
     private final List<Dependency> dependencies = new ArrayList<>();
+
+    private final List<Dependency> fulfilledDependencies = new ArrayList<>();
 
     public RuntimeStepProxy(StepIdentifier identifier, Step<C, I, R> step) {
         this.identifier = identifier;
@@ -103,22 +107,35 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
                 }
 
                 Class<Variable> type = (Class<Variable>)field.getType();
+                Class<?> variableType = null;
                 try {
                     // TODO: document behaviour
+                    var fieldType = field.getGenericType();
+                    if (fieldType instanceof ParameterizedType parameterizedType && parameterizedType.getActualTypeArguments().length == 1) {
+                        variableType = (Class<?>)parameterizedType.getActualTypeArguments()[0];
+                        fieldName += "_" + variableType.getName();
+                    }
+
                     Variable variable = type.getDeclaredConstructor(Scope.class, String.class).newInstance(state.scope(), fieldName);
                     boolean isAccessible = field.canAccess(delegate);
                     field.setAccessible(true);
                     field.set(delegate, variable);
                     field.setAccessible(isAccessible);
+
                 } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException |
                     NoSuchMethodException | SecurityException e) {
                     throw new IllegalStateException(e);
                 }
-            }
 
-            Consumes consumes = ReflectionUtils.getAnnotation(field, Consumes.class);
-            if (consumes != null) {
-                dependencies.add(new Dependency(consumes.name(), field.getType()));
+                Consumes consumes = ReflectionUtils.getAnnotation(field, Consumes.class);
+                if (consumes != null && variableType != null) {
+                    dependencies.add(new Dependency(consumes.name(), variableType));
+                }
+
+                Provides produces = ReflectionUtils.getAnnotation(field, Provides.class);
+                if (produces != null && variableType != null) {
+                    fulfilledDependencies.add(new Dependency(produces.name(), variableType));
+                }
             }
         }
     }
@@ -206,7 +223,12 @@ public final class RuntimeStepProxy<C, I, R> implements StepProxy<C, I, R> {
         return identifier;
     }
 
-    public List<Dependency> getDependencies() {
-        return dependencies;
+    public Set<Dependency> getDependencies() {
+        return Set.copyOf(dependencies);
+    }
+
+    @Override
+    public Set<Dependency> getFulfilledDependencies() {
+        return Set.copyOf(fulfilledDependencies);
     }
 }

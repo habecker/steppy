@@ -10,7 +10,6 @@ import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.validation.ValidationException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -49,17 +48,16 @@ class ProvidesTest {
         assertThat(StaticConsumerStep.consumedClient).isEqualTo(new SomeClient("test"));
     }
 
-    @Disabled("Currently not supported")
     @DisplayName("Validation should fail if a step is missing a provider")
     @Test
     void testMissingProvider() {
         assertThatExceptionOfType(ValidationException.class).isThrownBy(
             () -> builder(None.class, SomeClient.class).append(ConsumerStep.class).build()).withMessageContaining(
-            "No provider before de.y2g.steppy.api.provides.ProvidesTest.ConsumerStep found for client of type de.y2g.steppy.api.provides.ProvidesTest$SomeClient");
+            "Flow verification failed with errors: Missing dependencies for step de.y2g.steppy.api.provides.ProvidesTest.ConsumerStep: (SomeClient)");
         assertThatExceptionOfType(ValidationException.class).isThrownBy(
                 () -> builder(None.class, SomeClient.class).append(ConsumerStep.class).append(ProviderStep.class).build())
             .withMessageContaining(
-                "No provider before de.y2g.steppy.api.provides.ProvidesTest.ConsumerStep found for client of type de.y2g.steppy.api.provides.ProvidesTest$SomeClient");
+                "Flow verification failed with errors: Missing dependencies for step de.y2g.steppy.api.provides.ProvidesTest.ConsumerStep: (SomeClient)");
     }
 
     private record SomeClient(String name) {

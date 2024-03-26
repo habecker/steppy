@@ -7,6 +7,8 @@ import de.y2g.steppy.api.Result;
 import de.y2g.steppy.api.exception.ExecutionException;
 import de.y2g.steppy.api.exception.MissingConfigurationException;
 import de.y2g.steppy.api.streaming.Source;
+import de.y2g.steppy.api.validation.DataFlowValidationError;
+import de.y2g.steppy.api.validation.DependencyError;
 import de.y2g.steppy.api.validation.ValidationError;
 import de.y2g.steppy.api.validation.ValidationErrorType;
 import de.y2g.steppy.api.validation.ValidationException;
@@ -14,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,10 +39,10 @@ public abstract class FlowProxy<I, R> implements Verifiable {
                 typing.getReturnType().getSimpleName()));
     }
 
-    private static void verifyWhenVerifiable(List<ValidationError> errors, StepProxy current) {
+    private static void verifyWhenVerifiable(List<ValidationError> errors, StepProxy current, List<Dependency> providedDependencies) {
         try {
             if (current instanceof Verifiable verifiable) {
-                verifiable.verify();
+                verifiable.verify(providedDependencies);
             }
         } catch (ValidationException e) {
             errors.addAll(e.getErrors());
@@ -67,24 +70,19 @@ public abstract class FlowProxy<I, R> implements Verifiable {
     }
 
     @Override
-    public void verify() throws ValidationException {
-        Class<?> configType = typing.getConfigType();
+    public void verify(List<Dependency> providedDependencies) throws ValidationException {
         List<ValidationError> errors = new ArrayList<>();
 
-        /*steps.forEach(step -> {
-            if (!Typing.isConfigTypeCompatible(configType, step.getTyping())) {
-                errors.add(new ValidationError(ValidationErrorType.CONFIGURATION_TYPE_INCOMPATIBLE, step.getIdentifier()));
-            }
-        });*/
+        providedDependencies = new ArrayList<>(providedDependencies);
 
         // TODO validate source generic type
         if (!Typing.isInputTypeCompatible(steps.get(0).getTyping().getInputType(),
             typing) && (!(this instanceof NestedSerialFlow && typing.getInputType()
             .equals(Source.class))) && (!(this instanceof NestedConcurrentFlow && typing.getInputType().equals(Source.class)))) {
-            errors.add(new ValidationError(ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE, steps.get(0).getIdentifier()));
+            errors.add(new DataFlowValidationError(ValidationErrorType.FLOW_INPUT_TYPE_INCOMPATIBLE, steps.get(0).getIdentifier()));
         }
 
-        verifySteps(this.steps, errors);
+        verifySteps(this.steps, errors, providedDependencies);
 
         verifyReturnStep(errors);
 
@@ -96,28 +94,44 @@ public abstract class FlowProxy<I, R> implements Verifiable {
     private void verifyReturnStep(List<ValidationError> errors) {
         if (!(this instanceof NestedConcurrentFlow) && !(this instanceof NestedSerialFlow) && !Typing.isReturnTypeCompatible(
             typing.getReturnType(), steps.get(steps.size() - 1).getTyping())) {
-            errors.add(new ValidationError(ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE, steps.get(steps.size() - 1).getIdentifier()));
+            errors.add(new DataFlowValidationError(ValidationErrorType.FLOW_RETURN_TYPE_INCOMPATIBLE,
+                steps.get(steps.size() - 1).getIdentifier()));
         }
     }
 
-    private void verifySteps(List<StepProxy> steps, List<ValidationError> errors) {
+    private void verifySteps(List<StepProxy> steps, List<ValidationError> errors, List<Dependency> providedDependencies) {
         var iterator = steps.iterator();
         StepProxy current = iterator.next();
+
+        var missingDependencies = new HashSet<>(current.getDependencies());
+        missingDependencies.removeAll(providedDependencies);
+
+        if (!missingDependencies.isEmpty()) {
+            errors.add(new DependencyError(ValidationErrorType.MISSING_DEPENDENCIES, current.getIdentifier(), missingDependencies));
+        }
 
         while (iterator.hasNext()) {
             StepProxy next = iterator.next();
 
             if (!Typing.isInputTypeCompatible(current.getTyping(), next.getTyping())) {
-                errors.add(
-                    new ValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(), next.getIdentifier()));
+                errors.add(new DataFlowValidationError(ValidationErrorType.STEP_INPUT_TYPE_INCOMPATIBLE, current.getIdentifier(),
+                    next.getIdentifier()));
             }
 
-            verifyWhenVerifiable(errors, current);
+            missingDependencies = new HashSet<>(current.getDependencies());
+            missingDependencies.removeAll(providedDependencies);
 
+            if (!missingDependencies.isEmpty()) {
+                errors.add(new DependencyError(ValidationErrorType.MISSING_DEPENDENCIES, current.getIdentifier(), missingDependencies));
+            }
+
+            verifyWhenVerifiable(errors, current, providedDependencies);
+
+            providedDependencies.addAll(current.getFulfilledDependencies());
             current = next;
         }
 
-        verifyWhenVerifiable(errors, current);
+        verifyWhenVerifiable(errors, current, providedDependencies);
     }
 
     protected Result<R> invokeSingleItem(Context<Configurations> context, I input) throws ExecutionException {

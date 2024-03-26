@@ -1,25 +1,11 @@
 package de.y2g.steppy.api.validation;
 
-import de.y2g.steppy.core.StepIdentifier;
-
-import java.util.Arrays;
 import java.util.List;
 
-public class ValidationError {
-    private final ValidationErrorType type;
+public interface ValidationError {
+    ValidationErrorType getType();
 
-    private final StepIdentifier[] steps;
+    List<String> getSteps();
 
-    public ValidationError(ValidationErrorType type, StepIdentifier... steps) {
-        this.type = type;
-        this.steps = steps;
-    }
-
-    public ValidationErrorType getType() {
-        return type;
-    }
-
-    public List<String> getSteps() {
-        return Arrays.stream(steps).map(StepIdentifier::name).toList();
-    }
+    String getMessage();
 }

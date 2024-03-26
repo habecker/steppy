@@ -6,7 +6,7 @@ public class ValidationException extends RuntimeException {
     private final List<ValidationError> errors;
 
     public ValidationException(List<ValidationError> errors) {
-        super("Flow verification failed with errors: " + errors.stream().map(ValidationError::getType).toList());
+        super("Flow verification failed with errors: " + String.join("\n", errors.stream().map(ValidationError::getMessage).toList()));
         this.errors = errors;
     }
 

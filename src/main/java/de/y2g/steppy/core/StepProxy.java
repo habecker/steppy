@@ -3,6 +3,8 @@ package de.y2g.steppy.core;
 import de.y2g.steppy.api.Context;
 import de.y2g.steppy.api.exception.ExecutionException;
 
+import java.util.Set;
+
 public interface StepProxy<C, I, R> {
     Typing<C, I, R> getTyping();
 
@@ -17,4 +19,8 @@ public interface StepProxy<C, I, R> {
     void onAfterStep(Context<C> context) throws ExecutionException;
 
     StepIdentifier getIdentifier();
+
+    Set<Dependency> getDependencies();
+
+    Set<Dependency> getFulfilledDependencies();
 }
