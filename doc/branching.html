@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Branching & Nesting - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+</nav>
+<h1>Branching & Nesting</h1>
+<h2>Conditional branches</h2>
+<p><code>branch()</code> routes the execution to one of several sub-builders based on predicates.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(Integer.class, Integer.class)
+    .branch(Integer.class, Integer.class, b -> b
+        .when(i -> i < 10, br -> br.append(IncrementerStep.class))
+        .otherwise(br -> br.append(IncrementerStep.class).append(IncrementerStep.class)))
+    .build();
+
+flow.invoke(0).getResult();  // 1
+flow.invoke(10).getResult(); // 12</code></pre>
+<p>If no branch matches, the flow fails with an <code>ExecutionException</code>.</p>
+<h2>Nesting flows</h2>
+<p><code>nest()</code> embeds a sub-flow inside another flow. The nested flow runs with the output of the previous step as its input.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .nest(String.class, b -> b.append(AppendBStep.class).append(AppendAStep.class))
+    .build();
+
+flow.invoke("").getResult(); // "ABA"</code></pre>
+<p>Nesting works with sequential and concurrent flows and is useful for reusing common pipelines.</p>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>State & Lifecycle - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+</nav>
+<h1>State & Lifecycle</h1>
+<p>Use the <code>@State</code> annotation to store variables in the execution context.</p>
+<pre><code>class StateStep implements Step&lt;None, Integer, Integer&gt; {
+    @State
+    Variable<Integer> counter;
+
+    @Override
+    public Integer invoke(Context&lt;None&gt; ctx, Integer input) {
+        Integer current = counter.get(ctx);
+        counter.set(ctx, current == null ? input : current + input);
+        return input;
+    }
+}</code></pre>
+<p>Variables default to step scope. Setting <code>@State(scope = Scope.FLOW)</code> shares a value across all steps in a flow.</p>
+<h2>Lifecycle hooks</h2>
+<p><code>@Before</code> and <code>@After</code> run code before or after a flow or step. They are useful for resource management.</p>
+<pre><code>class LifecycleStep implements Step&lt;None, None, None&gt; {
+    @Before(Scope.FLOW)
+    void open(Context&lt;None&gt; ctx) {}
+
+    @After(Scope.FLOW)
+    void close(Context&lt;None&gt; ctx) {}
+
+    @Override
+    public None invoke(Context&lt;None&gt; ctx, None in) { return None.value(); }
+}</code></pre>
+</body>
+</html>

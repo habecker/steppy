@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Streaming - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+</nav>
+<h1>Streaming</h1>
+<p>Flows can continuously pull values from a <code>Source</code> and push results to a <code>Sink</code>.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(AppendBStep.class)
+    .build();
+
+var source = new SimpleSource<>(Stream.of("", "C"));
+var sink = new SimpleSink<String>();
+flow.stream(source, sink);
+// sink.getResult() == ["AB", "CAB"]</code></pre>
+<p>Streaming works for sequential and concurrent flows and can itself be used inside <code>nest()</code>.</p>
+</body>
+</html>

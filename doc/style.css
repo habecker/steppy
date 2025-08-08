@@ -1,0 +1,29 @@
+body {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  line-height: 1.6;
+  background: #fff;
+  color: #222;
+}
+nav {
+  margin-bottom: 2rem;
+}
+nav a {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #0366d6;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+pre {
+  background: #f4f4f4;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+code {
+  font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}

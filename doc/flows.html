@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flows - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+</nav>
+<h1>Flows</h1>
+<p>A flow is a chain of steps executed either sequentially or concurrently.</p>
+<h2>Sequential execution</h2>
+<p>Steps run one after another. Each step receives the previous result as input.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(AppendBStep.class)
+    .build();
+
+Result&lt;String&gt; result = flow.invoke("" );
+// result.getResult() == "AB"</code></pre>
+<h2>Concurrent execution</h2>
+<p>Appending <code>concurrent()</code> makes the flow process a collection of inputs in parallel.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(AppendBStep.class)
+    .concurrent()
+    .build();
+
+var outputs = flow.invoke(List.of("", "C"));
+// two Result&lt;String&gt; elements: "AB" and "CAB"</code></pre>
+<p>The returned collection mirrors the input order and captures success, failure or abort for each element.</p>
+</body>
+</html>

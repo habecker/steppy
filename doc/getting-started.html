@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Getting Started - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+</nav>
+<h1>Getting started</h1>
+<p>This quick example appends letters to a string to demonstrate how steps are defined, registered and combined into a flow.</p>
+<h2>1. Define the steps</h2>
+<pre><code>public class AppendAStep implements Step&lt;None, String, String&gt; {
+    @Override
+    public String invoke(Context&lt;None&gt; ctx, String input) {
+        return input + "A";
+    }
+}
+
+public class AppendBStep implements Step&lt;None, String, String&gt; {
+    @Override
+    public String invoke(Context&lt;None&gt; ctx, String input) {
+        return input + "B";
+    }
+}</code></pre>
+<h2>2. Register steps and prepare the builder</h2>
+<pre><code>StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());</code></pre>
+<h2>3. Build and run the flow</h2>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(AppendBStep.class)
+    .build();
+
+Result&lt;String&gt; result = flow.invoke("");
+System.out.println(result.getResult()); // prints "AB"</code></pre>
+<p>The same flow can process a collection of inputs or run concurrently by appending <code>concurrent()</code> before calling <code>build()</code>. Continue with the other chapters to explore advanced features.</p>
+</body>
+</html>
