@@ -2,37 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Validation & Errors - Steppy</title>
+<title>Validation &amp; Errors - Steppy</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav>
-  <a class="brand" href="index.html">Steppy</a>
-  <a href="getting-started.html">Getting started</a>
-  <a href="flows.html">Flows</a>
-  <a href="branching.html">Branching & Nesting</a>
-  <a href="streaming.html">Streaming</a>
-  <a href="state.html">State & Lifecycle</a>
-  <a href="configuration.html">Configuration</a>
-  <a href="dependency-injection.html">Dependency injection</a>
-  <a href="validation.html">Validation & Errors</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.html">Steppy</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Getting started</a></li>
+        <li class="nav-item"><a class="nav-link" href="flows.html">Flows</a></li>
+        <li class="nav-item"><a class="nav-link" href="branching.html">Branching &amp; Nesting</a></li>
+        <li class="nav-item"><a class="nav-link" href="streaming.html">Streaming</a></li>
+        <li class="nav-item"><a class="nav-link" href="state.html">State &amp; Lifecycle</a></li>
+        <li class="nav-item"><a class="nav-link" href="configuration.html">Configuration</a></li>
+        <li class="nav-item"><a class="nav-link" href="dependency-injection.html">Dependency injection</a></li>
+        <li class="nav-item"><a class="nav-link" href="validation.html">Validation &amp; Errors</a></li>
+      </ul>
+    </div>
+  </div>
 </nav>
-<main>
-<h1>Validation & Errors</h1>
-<p>Steppy validates type compatibility when building flows and captures errors during execution.</p>
+<main class="container my-4">
+<h1>Validation &amp; Errors</h1>
+<p>Steppy validates type compatibility when building flows and captures failures during execution.</p>
 <h2>Result types</h2>
 <p>Flow invocation returns a <code>Result</code> indicating success, failure or abort.</p>
-<pre><code>var flow = StaticFlowBuilderFactory
+<pre><code class="language-java">var flow = StaticFlowBuilderFactory
     .builder(String.class, String.class)
     .append(AppendAStep.class)
     .append(FailStep.class)
     .build();
 
-var result = flow.invoke("");
-result.getType();               // FAILED
+Result&lt;String&gt; result = flow.invoke("");
+result.getType();                 // FAILED
 result.getException().getMessage(); // "Fail"</code></pre>
 <h2>Aborting a flow</h2>
-<pre><code>class AbortStep implements Step&lt;None, String, String&gt; {
+<pre><code class="language-java">class AbortStep implements Step&lt;None, String, String&gt; {
     @Override
     public String invoke(Context&lt;None&gt; ctx, String in) {
         ctx.abort();
@@ -42,11 +53,11 @@ result.getException().getMessage(); // "Fail"</code></pre>
 <p>Calling <code>abort()</code> stops the flow and returns a result of type <code>ABORTED</code>.</p>
 <h2>Type validation</h2>
 <p>The builder checks that the input and output types of all steps line up. Mismatches throw a <code>ValidationException</code>.</p>
-<pre><code>var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
+<pre><code class="language-java">var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
 builder.append(AppendAStep.class).build(); // throws ValidationException</code></pre>
 <h2>Generic types</h2>
 <p>Steps may declare parameterized types. Steppy keeps that information for validation.</p>
-<pre><code>class SumOptional implements Step&lt;Optional&lt;Integer&gt;, Optional&lt;Integer&gt;, Optional&lt;Integer&gt;&gt; {
+<pre><code class="language-java">class SumOptional implements Step&lt;Optional&lt;Integer&gt;, Optional&lt;Integer&gt;, Optional&lt;Integer&gt;&gt; {
     @Override
     public Optional&lt;Integer&gt; invoke(Context&lt;Optional&lt;Integer&gt;&gt; ctx,
                                      Optional&lt;Integer&gt; in) {
@@ -59,5 +70,8 @@ var flow = StaticFlowBuilderFactory.builder(Optional.class, Optional.class)
 flow.invoke(Configurations.of(Optional.of(1)), Optional.of(2)).getResult(); // Optional[3]
 </code></pre>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 </body>
 </html>

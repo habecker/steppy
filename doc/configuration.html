@@ -3,24 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <title>Configuration - Steppy</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav>
-  <a class="brand" href="index.html">Steppy</a>
-  <a href="getting-started.html">Getting started</a>
-  <a href="flows.html">Flows</a>
-  <a href="branching.html">Branching & Nesting</a>
-  <a href="streaming.html">Streaming</a>
-  <a href="state.html">State & Lifecycle</a>
-  <a href="configuration.html">Configuration</a>
-  <a href="dependency-injection.html">Dependency injection</a>
-  <a href="validation.html">Validation & Errors</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="index.html">Steppy</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="getting-started.html">Getting started</a></li>
+        <li class="nav-item"><a class="nav-link" href="flows.html">Flows</a></li>
+        <li class="nav-item"><a class="nav-link" href="branching.html">Branching &amp; Nesting</a></li>
+        <li class="nav-item"><a class="nav-link" href="streaming.html">Streaming</a></li>
+        <li class="nav-item"><a class="nav-link" href="state.html">State &amp; Lifecycle</a></li>
+        <li class="nav-item"><a class="nav-link" href="configuration.html">Configuration</a></li>
+        <li class="nav-item"><a class="nav-link" href="dependency-injection.html">Dependency injection</a></li>
+        <li class="nav-item"><a class="nav-link" href="validation.html">Validation &amp; Errors</a></li>
+      </ul>
+    </div>
+  </div>
 </nav>
-<main>
+<main class="container my-4">
 <h1>Configuration</h1>
-<p>Configurations are typed objects provided when invoking or streaming a flow. Steps can access them via the execution context.</p>
-<pre><code>class ReturnConfigStep implements Step&lt;Integer, None, Integer&gt; {
+<p>Configurations are typed objects supplied when invoking or streaming a flow. They typically hold external services or settings that steps depend on.</p>
+<pre><code class="language-java">class ReturnConfigStep implements Step&lt;Integer, None, Integer&gt; {
     @Override
     public Integer invoke(Context&lt;Integer&gt; ctx, None in) {
         return ctx.getConfiguration();
@@ -33,7 +44,10 @@ var flow = StaticFlowBuilderFactory
     .build();
 
 flow.invoke(Configurations.of(42)).getResult(); // 42</code></pre>
-<p>If a required configuration is missing, a <code>MissingConfigurationException</code> is thrown.</p>
+<p>The generic parameter on <code>Step&lt;C, I, O&gt;</code> defines the expected configuration type. If a required configuration is missing, a <code>MissingConfigurationException</code> is thrown.</p>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
 </body>
 </html>
