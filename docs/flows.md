@@ -2,6 +2,25 @@
 
 A *flow* is an ordered chain of steps. Each step implements the `Step<C, I, O>` interface and the builder ensures that the output type of one step matches the input type of the next.
 
+```java
+class AppendAStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "A";
+    }
+}
+
+class AppendBStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "B";
+    }
+}
+
+// make the steps available to the builder
+StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
+```
+
 ## Sequential execution
 
 By default steps run one after another. Each step receives the previous result as input.

@@ -5,6 +5,31 @@
 Flows can route execution to different branches based on predicates. Each branch is itself a small builder.
 
 ```java
+class IncrementerStep implements Step<None, Integer, Integer> {
+    @Override
+    public Integer invoke(Context<None> ctx, Integer in) {
+        return in + 1;
+    }
+}
+
+class AppendAStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "A";
+    }
+}
+
+class AppendBStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "B";
+    }
+}
+
+StaticStepRepository.register(IncrementerStep.class, AppendAStep.class, AppendBStep.class);
+```
+
+```java
 var flow = StaticFlowBuilderFactory
     .builder(Integer.class, Integer.class)
     .branch(Integer.class, Integer.class, b -> b

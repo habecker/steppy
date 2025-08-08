@@ -7,6 +7,22 @@ Steppy validates type compatibility when building flows and captures failures du
 Flow invocation returns a `Result` indicating success, failure or abort.
 
 ```java
+class AppendAStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "A";
+    }
+}
+
+class FailStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) throws ExecutionException {
+        throw new ExecutionException("Fail");
+    }
+}
+
+StaticStepRepository.register(AppendAStep.class, FailStep.class);
+
 var flow = StaticFlowBuilderFactory
     .builder(String.class, String.class)
     .append(AppendAStep.class)

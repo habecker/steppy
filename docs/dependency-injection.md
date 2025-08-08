@@ -3,6 +3,20 @@
 Steps are supplied by a `StepRepository`. For small examples the provided `StaticStepRepository` registers classes or instances manually:
 
 ```java
+class AppendAStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "A";
+    }
+}
+
+class AppendBStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "B";
+    }
+}
+
 StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
 var flow = StaticFlowBuilderFactory
     .builder(String.class, String.class)

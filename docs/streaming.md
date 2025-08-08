@@ -3,6 +3,22 @@
 Besides processing finite inputs, flows can continuously pull values from a `Source` and forward the results to a `Sink`. This enables long running pipelines for message queues, file processing or real time feeds.
 
 ```java
+class AppendAStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "A";
+    }
+}
+
+class AppendBStep implements Step<None, String, String> {
+    @Override
+    public String invoke(Context<None> ctx, String in) {
+        return in + "B";
+    }
+}
+
+StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
+
 var flow = StaticFlowBuilderFactory
     .builder(String.class, String.class)
     .append(AppendAStep.class)
