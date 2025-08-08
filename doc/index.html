@@ -7,7 +7,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html">Home</a>
+  <a class="brand" href="index.html">Steppy</a>
   <a href="getting-started.html">Getting started</a>
   <a href="flows.html">Flows</a>
   <a href="branching.html">Branching & Nesting</a>
@@ -15,26 +15,29 @@
   <a href="state.html">State & Lifecycle</a>
   <a href="configuration.html">Configuration</a>
   <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
 </nav>
-<h1>Steppy</h1>
-<p><strong>Steppy</strong> is a tiny workflow engine for Java. It composes small, typed steps into flows that process data
-in sequence or in parallel.</p>
-<p>The library focuses on a few core building blocks:</p>
+<main>
+<h1>Lightweight workflow engine</h1>
+<p><strong>Steppy</strong> lets you compose small, reusable Java steps into workflows called <em>flows</em>. Each step declares its input and output types and Steppy wires them together for sequential or concurrent processing.</p>
+<p>Key ideas:</p>
 <ul>
   <li><strong>Step</strong> – a unit of work with typed input and output.</li>
-  <li><strong>Flow</strong> – an executable pipeline of steps.</li>
-  <li><strong>FlowBuilder</strong> – a fluent API for wiring steps together.</li>
-  <li><strong>StepRepository</strong> – pluggable factory for obtaining step instances.</li>
+  <li><strong>Flow</strong> – a pipeline executing steps.</li>
+  <li><strong>FlowBuilder</strong> – a fluent API to assemble flows.</li>
+  <li><strong>StepRepository</strong> – pluggable lookup for step instances.</li>
 </ul>
-<p>The rest of this guide walks through the major features with runnable snippets taken from the test suite.</p>
+<p>Explore the chapters below to see Steppy in action:</p>
 <ul>
-  <li><a href="getting-started.html">Getting started</a> – build your first flow.</li>
-  <li><a href="flows.html">Flows</a> – execute steps sequentially or concurrently.</li>
+  <li><a href="getting-started.html">Getting started</a> – build a small workflow.</li>
+  <li><a href="flows.html">Flows</a> – run steps sequentially or concurrently.</li>
   <li><a href="branching.html">Branching & Nesting</a> – route and compose subflows.</li>
-  <li><a href="streaming.html">Streaming</a> – process infinite sources.</li>
-  <li><a href="state.html">State & Lifecycle</a> – share data and hook into execution phases.</li>
-  <li><a href="configuration.html">Configuration</a> – access external configuration objects.</li>
-  <li><a href="dependency-injection.html">Dependency injection</a> – integrate with Spring or CDI.</li>
+  <li><a href="streaming.html">Streaming</a> – work with infinite sources.</li>
+  <li><a href="state.html">State & Lifecycle</a> – share variables and hook into execution.</li>
+  <li><a href="configuration.html">Configuration</a> – pass external configuration objects.</li>
+  <li><a href="dependency-injection.html">Dependency injection</a> – integrate with DI frameworks.</li>
+  <li><a href="validation.html">Validation & Errors</a> – type checking and error handling.</li>
 </ul>
+</main>
 </body>
 </html>

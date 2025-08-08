@@ -7,7 +7,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html">Home</a>
+  <a class="brand" href="index.html">Steppy</a>
   <a href="getting-started.html">Getting started</a>
   <a href="flows.html">Flows</a>
   <a href="branching.html">Branching & Nesting</a>
@@ -15,35 +15,61 @@
   <a href="state.html">State & Lifecycle</a>
   <a href="configuration.html">Configuration</a>
   <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
 </nav>
+<main>
 <h1>Getting started</h1>
-<p>This quick example appends letters to a string to demonstrate how steps are defined, registered and combined into a flow.</p>
+<p>This quick example shows how Steppy orchestrates an order fulfilment pipeline.</p>
 <h2>1. Define the steps</h2>
-<pre><code>public class AppendAStep implements Step&lt;None, String, String&gt; {
+<pre><code>record Order(String id, int total) {}
+
+class ValidateOrder implements Step&lt;None, Order, Order&gt; {
     @Override
-    public String invoke(Context&lt;None&gt; ctx, String input) {
-        return input + "A";
+    public Order invoke(Context&lt;None&gt; ctx, Order order) throws ExecutionException {
+        if (order.total() &lt;= 0) {
+            throw new ExecutionException("total must be positive");
+        }
+        return order;
     }
 }
 
-public class AppendBStep implements Step&lt;None, String, String&gt; {
+class ChargePayment implements Step&lt;PaymentService, Order, Order&gt; {
     @Override
-    public String invoke(Context&lt;None&gt; ctx, String input) {
-        return input + "B";
+    public Order invoke(Context&lt;PaymentService&gt; ctx, Order order) throws ExecutionException {
+        ctx.getConfiguration().charge(order.id(), order.total());
+        return order;
     }
-}</code></pre>
-<h2>2. Register steps and prepare the builder</h2>
-<pre><code>StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
-StaticFlowBuilderFactory.initialize(Executors.newSingleThreadExecutor());</code></pre>
+}
+
+class SendConfirmation implements Step&lt;None, Order, None&gt; {
+    @Override
+    public None invoke(Context&lt;None&gt; ctx, Order order) {
+        System.out.println("confirmation for " + order.id());
+        return None.value();
+    }
+}
+
+class PaymentService {
+    void charge(String id, int amount) { /* ... */ }
+}
+</code></pre>
+<h2>2. Register steps and initialize</h2>
+<pre><code>StaticStepRepository.register(
+    ValidateOrder.class, ChargePayment.class, SendConfirmation.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));</code></pre>
 <h2>3. Build and run the flow</h2>
 <pre><code>var flow = StaticFlowBuilderFactory
-    .builder(String.class, String.class)
-    .append(AppendAStep.class)
-    .append(AppendBStep.class)
+    .builder(Order.class, None.class)
+    .append(ValidateOrder.class)
+    .append(ChargePayment.class)
+    .append(SendConfirmation.class)
     .build();
 
-Result&lt;String&gt; result = flow.invoke("");
-System.out.println(result.getResult()); // prints "AB"</code></pre>
-<p>The same flow can process a collection of inputs or run concurrently by appending <code>concurrent()</code> before calling <code>build()</code>. Continue with the other chapters to explore advanced features.</p>
+var service = new PaymentService();
+var order = new Order("A42", 50);
+flow.invoke(Configurations.of(service), order);
+</code></pre>
+<p>The pipeline validates the order, charges the configured payment service and sends a confirmation.</p>
+</main>
 </body>
 </html>

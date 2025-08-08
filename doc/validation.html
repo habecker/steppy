@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Validation & Errors - Steppy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">Steppy</a>
+  <a href="getting-started.html">Getting started</a>
+  <a href="flows.html">Flows</a>
+  <a href="branching.html">Branching & Nesting</a>
+  <a href="streaming.html">Streaming</a>
+  <a href="state.html">State & Lifecycle</a>
+  <a href="configuration.html">Configuration</a>
+  <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
+</nav>
+<main>
+<h1>Validation & Errors</h1>
+<p>Steppy validates type compatibility when building flows and captures errors during execution.</p>
+<h2>Result types</h2>
+<p>Flow invocation returns a <code>Result</code> indicating success, failure or abort.</p>
+<pre><code>var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(FailStep.class)
+    .build();
+
+var result = flow.invoke("");
+result.getType();               // FAILED
+result.getException().getMessage(); // "Fail"</code></pre>
+<h2>Aborting a flow</h2>
+<pre><code>class AbortStep implements Step&lt;None, String, String&gt; {
+    @Override
+    public String invoke(Context&lt;None&gt; ctx, String in) {
+        ctx.abort();
+        return null;
+    }
+}</code></pre>
+<p>Calling <code>abort()</code> stops the flow and returns a result of type <code>ABORTED</code>.</p>
+<h2>Type validation</h2>
+<p>The builder checks that the input and output types of all steps line up. Mismatches throw a <code>ValidationException</code>.</p>
+<pre><code>var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
+builder.append(AppendAStep.class).build(); // throws ValidationException</code></pre>
+<h2>Generic types</h2>
+<p>Steps may declare parameterized types. Steppy keeps that information for validation.</p>
+<pre><code>class SumOptional implements Step&lt;Optional&lt;Integer&gt;, Optional&lt;Integer&gt;, Optional&lt;Integer&gt;&gt; {
+    @Override
+    public Optional&lt;Integer&gt; invoke(Context&lt;Optional&lt;Integer&gt;&gt; ctx,
+                                     Optional&lt;Integer&gt; in) {
+        return Optional.of(in.orElse(0) + ctx.getConfiguration().orElse(0));
+    }
+}
+
+var flow = StaticFlowBuilderFactory.builder(Optional.class, Optional.class)
+    .append(SumOptional.class).build();
+flow.invoke(Configurations.of(Optional.of(1)), Optional.of(2)).getResult(); // Optional[3]
+</code></pre>
+</main>
+</body>
+</html>

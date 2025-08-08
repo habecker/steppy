@@ -7,7 +7,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html">Home</a>
+  <a class="brand" href="index.html">Steppy</a>
   <a href="getting-started.html">Getting started</a>
   <a href="flows.html">Flows</a>
   <a href="branching.html">Branching & Nesting</a>
@@ -15,12 +15,14 @@
   <a href="state.html">State & Lifecycle</a>
   <a href="configuration.html">Configuration</a>
   <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
 </nav>
+<main>
 <h1>State & Lifecycle</h1>
 <p>Use the <code>@State</code> annotation to store variables in the execution context.</p>
 <pre><code>class StateStep implements Step&lt;None, Integer, Integer&gt; {
     @State
-    Variable<Integer> counter;
+    Variable&lt;Integer&gt; counter;
 
     @Override
     public Integer invoke(Context&lt;None&gt; ctx, Integer input) {
@@ -42,5 +44,6 @@
     @Override
     public None invoke(Context&lt;None&gt; ctx, None in) { return None.value(); }
 }</code></pre>
+</main>
 </body>
 </html>

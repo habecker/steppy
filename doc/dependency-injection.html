@@ -7,7 +7,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html">Home</a>
+  <a class="brand" href="index.html">Steppy</a>
   <a href="getting-started.html">Getting started</a>
   <a href="flows.html">Flows</a>
   <a href="branching.html">Branching & Nesting</a>
@@ -15,7 +15,9 @@
   <a href="state.html">State & Lifecycle</a>
   <a href="configuration.html">Configuration</a>
   <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
 </nav>
+<main>
 <h1>Dependency injection</h1>
 <p>Steps are created by a <code>StepRepository</code>. The provided <code>StaticStepRepository</code> registers classes or instances manually:</p>
 <pre><code>StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
@@ -25,5 +27,6 @@ var flow = StaticFlowBuilderFactory
     .append(AppendBStep.class)
     .build();</code></pre>
 <p>For larger applications you can integrate with a DI container. Modules for CDI and Spring expose repositories that fetch steps from the application context, enabling constructor injection and other framework features.</p>
+</main>
 </body>
 </html>

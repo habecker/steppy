@@ -7,7 +7,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html">Home</a>
+  <a class="brand" href="index.html">Steppy</a>
   <a href="getting-started.html">Getting started</a>
   <a href="flows.html">Flows</a>
   <a href="branching.html">Branching & Nesting</a>
@@ -15,7 +15,9 @@
   <a href="state.html">State & Lifecycle</a>
   <a href="configuration.html">Configuration</a>
   <a href="dependency-injection.html">Dependency injection</a>
+  <a href="validation.html">Validation & Errors</a>
 </nav>
+<main>
 <h1>Configuration</h1>
 <p>Configurations are typed objects provided when invoking or streaming a flow. Steps can access them via the execution context.</p>
 <pre><code>class ReturnConfigStep implements Step&lt;Integer, None, Integer&gt; {
@@ -32,5 +34,6 @@ var flow = StaticFlowBuilderFactory
 
 flow.invoke(Configurations.of(42)).getResult(); // 42</code></pre>
 <p>If a required configuration is missing, a <code>MissingConfigurationException</code> is thrown.</p>
+</main>
 </body>
 </html>
