@@ -1,0 +1,15 @@
+site_name: Steppy
+docs_dir: docs
+site_dir: site
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Flows: flows.md
+  - Branching & Nesting: branching.md
+  - Streaming: streaming.md
+  - State & Lifecycle: state.md
+  - Configuration: configuration.md
+  - Dependency injection: dependency-injection.md
+  - Validation & Errors: validation.md
+theme:
+  name: material
