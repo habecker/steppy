@@ -1,0 +1,653 @@
+diff --git a/README.md b/README.md
+index 92eb96ba6da8bd850d2043294b5d396ddb48ffdb..d5c28be712d59a75eb1bb7ce4569eb2143a33919 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,25 @@
+ # Steppy
+ 
+ Steppy is a Java library for creating workflows. It is designed to be simple and easy to use.
++
++## Documentation
++
++The docs are generated with [MkDocs](https://www.mkdocs.org/) using the Material theme.
++
++### Preview locally
++
++```bash
++mkdocs serve
++```
++
++### Build static site
++
++```bash
++mkdocs build
++```
++
++The HTML output is written to the `site/` directory and can be served by any web host. To publish on GitHub Pages run:
++
++```bash
++mkdocs gh-deploy
++```
+diff --git a/doc/api.puml b/docs/api.puml
+similarity index 100%
+rename from doc/api.puml
+rename to docs/api.puml
+diff --git a/docs/branching.md b/docs/branching.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fd76b9fb45363506b769afe92f247078d5fc21ba
+--- /dev/null
++++ b/docs/branching.md
+@@ -0,0 +1,60 @@
++# Branching & Nesting
++
++## Conditional branches
++
++Flows can route execution to different branches based on predicates. Each branch is itself a small builder.
++
++```java
++class IncrementerStep implements Step<None, Integer, Integer> {
++    @Override
++    public Integer invoke(Context<None> ctx, Integer in) {
++        return in + 1;
++    }
++}
++
++class AppendAStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "A";
++    }
++}
++
++class AppendBStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "B";
++    }
++}
++
++StaticStepRepository.register(IncrementerStep.class, AppendAStep.class, AppendBStep.class);
++```
++
++```java
++var flow = StaticFlowBuilderFactory
++    .builder(Integer.class, Integer.class)
++    .branch(Integer.class, Integer.class, b -> b
++        .when(i -> i < 10, br -> br.append(IncrementerStep.class))
++        .otherwise(br -> br.append(IncrementerStep.class).append(IncrementerStep.class)))
++    .build();
++
++flow.invoke(0).getResult();  // 1
++flow.invoke(10).getResult(); // 12
++```
++
++The first matching branch is executed. If none match, the flow fails with an `ExecutionException`.
++
++## Nesting flows
++
++Use `nest()` to embed a reusable sub-flow inside another flow. The nested flow receives the output of the previous step as its input.
++
++```java
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .nest(String.class, b -> b.append(AppendBStep.class).append(AppendAStep.class))
++    .build();
++
++flow.invoke("").getResult(); // "ABA"
++```
++
++Nesting works with sequential and concurrent flows and is handy for composing common pipelines.
+diff --git a/docs/concepts.md b/docs/concepts.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f93f4c22e4ee13bcfd06c230a648a464311c0db3
+--- /dev/null
++++ b/docs/concepts.md
+@@ -0,0 +1,117 @@
++# Concepts
++
++Steppy helps you structure complex workflows into small, testable units called **steps**.  This page introduces the main ideas from the top level down so you can understand how they fit together before diving into the details.
++
++## Workflows
++
++A *workflow* orchestrates a series of steps to reach a business goal.  You describe the workflow using a `Flow` that wires steps together and controls how they execute.
++
++```java
++Flow<String> flow = Flow.sequential(
++    registry.step("ValidateOrder"),
++    registry.step("ChargePayment"),
++    registry.step("SendConfirmation")
++);
++```
++
++`Flow.sequential` runs the steps one after another and passes the result of one step to the next.
++
++## Steps
++
++A step is a small unit of work.  It receives an input and returns a result wrapped in an `Outcome` to signal success or failure.
++
++```java
++public class ValidateOrder implements Step<Order, Order> {
++  @Override
++  public Outcome<Order> run(Order order, StepContext ctx) {
++    if (order.isValid()) {
++      return Outcome.ok(order);
++    }
++    return Outcome.fail("invalid order");
++  }
++}
++```
++
++## Execution modes
++
++Workflows can execute steps in different ways depending on the problem you are solving.
++
++### Sequential and concurrent flows
++
++*Sequential* flows execute one step at a time.  *Concurrent* flows run several steps in parallel and merge their outputs.
++
++```java
++Flow<String> concurrent = Flow.concurrent(
++    registry.step("AppendA"),
++    registry.step("AppendB")
++);
++```
++
++### Branching and nesting
++
++You can branch based on runtime data and even embed flows inside other flows.
++
++```java
++Flow<String> branched = Flow.branch(
++    ctx -> ctx.get("shouldAppendB"),
++    registry.step("AppendB"),
++    registry.step("AppendC")
++);
++```
++
++### Streaming
++
++For large or unbounded data sets, Steppy streams items through a source, optional processors, and a sink.
++
++```java
++Flow.stream(
++    registry.step("ReadLines"),
++    List.of(registry.step("Filter")),
++    registry.step("Persist")
++);
++```
++
++## State and lifecycle
++
++Each step can store temporary state in a `StepContext` and react to lifecycle hooks such as `before` and `after`.
++
++```java
++public class AuditStep implements Step<String, String> {
++  @Override
++  public void before(StepContext ctx) {
++    ctx.put("start", Instant.now());
++  }
++}
++```
++
++## Integration
++
++### Configuration
++
++Steps can read configuration values from the `StepContext` or an injected configuration object.
++
++```java
++String url = ctx.config("payment.url");
++```
++
++### Dependency injection
++
++Steppy integrates with DI containers.  Register the step class and the framework resolves its dependencies when the flow runs.
++
++```java
++registry.register("ChargePayment", new ChargePayment(service));
++```
++
++## Validation and errors
++
++Outcomes can fail.  You can abort a flow early or handle failures explicitly.
++
++```java
++Outcome<String> result = flow.run("start");
++if (result.isFail()) {
++  // handle error
++}
++```
++
++With these concepts in mind, explore the other chapters for deeper explanations and full examples.
++
+diff --git a/docs/configuration.md b/docs/configuration.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0765dcec31eccd5e29b0cc145ccf76f452c3346c
+--- /dev/null
++++ b/docs/configuration.md
+@@ -0,0 +1,21 @@
++# Configuration
++
++Configurations are typed objects supplied when invoking or streaming a flow. They typically hold external services or settings that steps depend on.
++
++```java
++class ReturnConfigStep implements Step<Integer, None, Integer> {
++    @Override
++    public Integer invoke(Context<Integer> ctx, None in) {
++        return ctx.getConfiguration();
++    }
++}
++
++var flow = StaticFlowBuilderFactory
++    .builder(None.class, Integer.class)
++    .append(ReturnConfigStep.class)
++    .build();
++
++flow.invoke(Configurations.of(42)).getResult(); // 42
++```
++
++The generic parameter on `Step<C, I, O>` defines the expected configuration type. If a required configuration is missing, a `MissingConfigurationException` is thrown.
+diff --git a/docs/dependency-injection.md b/docs/dependency-injection.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..837ff3cc59d2b49eb83aa6300745b4b74740bcd4
+--- /dev/null
++++ b/docs/dependency-injection.md
+@@ -0,0 +1,30 @@
++# Dependency injection
++
++Steps are supplied by a `StepRepository`. For small examples the provided `StaticStepRepository` registers classes or instances manually:
++
++```java
++class AppendAStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "A";
++    }
++}
++
++class AppendBStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "B";
++    }
++}
++
++StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .append(AppendBStep.class)
++    .build();
++```
++
++In larger applications you typically want steps to participate in your dependency injection container. Modules for CDI and Spring include repositories that look up step beans from the application context, enabling constructor injection and other framework features.
++
++To integrate with Spring for example, use the `SpringStepRepository` and register your step classes as beans. The flow builder will resolve them through the repository.
+diff --git a/docs/flows.md b/docs/flows.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b69909b7dde1e43b49cfd38a5e2648d6d36cde56
+--- /dev/null
++++ b/docs/flows.md
+@@ -0,0 +1,58 @@
++# Flows
++
++A *flow* is an ordered chain of steps. Each step implements the `Step<C, I, O>` interface and the builder ensures that the output type of one step matches the input type of the next.
++
++```java
++class AppendAStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "A";
++    }
++}
++
++class AppendBStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "B";
++    }
++}
++
++// make the steps available to the builder
++StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
++```
++
++## Sequential execution
++
++By default steps run one after another. Each step receives the previous result as input.
++
++```java
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .append(AppendBStep.class)
++    .build();
++
++Result<String> result = flow.invoke("");
++result.getResult(); // "AB"
++```
++
++The invocation returns a `Result` that captures the outcome and any thrown exception.
++
++## Concurrent execution
++
++Adding `concurrent()` switches the builder into a mode where a collection of inputs is processed in parallel using the globally configured executor.
++
++```java
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .append(AppendBStep.class)
++    .concurrent()
++    .build();
++
++List<Result<String>> outputs = flow.invoke(List.of("", "C"));
++// outputs.get(0).getResult() == "AB"
++// outputs.get(1).getResult() == "CAB"
++```
++
++The returned list mirrors the input order and retains the `Result` for each element.
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..a273abbb6f4c0a73d8508bbea24f6bc0429348bc
+--- /dev/null
++++ b/docs/getting-started.md
+@@ -0,0 +1,64 @@
++# Getting started
++
++This quick example shows how Steppy orchestrates a simple order fulfilment pipeline.
++
++## 1. Define the steps
++
++```java
++record Order(String id, int total) {}
++
++class ValidateOrder implements Step<None, Order, Order> {
++    @Override
++    public Order invoke(Context<None> ctx, Order order) throws ExecutionException {
++        if (order.total() <= 0) {
++            throw new ExecutionException("total must be positive");
++        }
++        return order;
++    }
++}
++
++class ChargePayment implements Step<PaymentService, Order, Order> {
++    @Override
++    public Order invoke(Context<PaymentService> ctx, Order order) throws ExecutionException {
++        ctx.getConfiguration().charge(order.id(), order.total());
++        return order;
++    }
++}
++
++class SendConfirmation implements Step<None, Order, None> {
++    @Override
++    public None invoke(Context<None> ctx, Order order) {
++        System.out.println("confirmation for " + order.id());
++        return None.value();
++    }
++}
++
++class PaymentService {
++    void charge(String id, int amount) { /* ... */ }
++}
++```
++
++## 2. Register steps and initialize
++
++```java
++StaticStepRepository.register(
++    ValidateOrder.class, ChargePayment.class, SendConfirmation.class);
++StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
++```
++
++## 3. Build and run the flow
++
++```java
++var flow = StaticFlowBuilderFactory
++    .builder(Order.class, None.class)
++    .append(ValidateOrder.class)
++    .append(ChargePayment.class)
++    .append(SendConfirmation.class)
++    .build();
++
++var service = new PaymentService();
++var order = new Order("A42", 50);
++flow.invoke(Configurations.of(service), order);
++```
++
++The pipeline validates the order, charges the configured payment service and sends a confirmation.
+diff --git a/docs/index.md b/docs/index.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..93a07c8555d1892e27cf81329a04c383dadb0f35
+--- /dev/null
++++ b/docs/index.md
+@@ -0,0 +1,16 @@
++# Steppy
++
++**Steppy** is a tiny framework for composing small, type-safe Java steps into robust workflows called _flows_. Each step declares the types it consumes and produces and the builder wires them into an executable pipeline.
++
++The library focuses on readability and testability. You assemble flows programmatically without external descriptors and run them sequentially, concurrently or even as an infinite stream.
++
++## What you can do
++
++- Run steps sequentially or in parallel
++- Branch to conditional sub-flows and nest reusable pipelines
++- Stream results from sources to sinks
++- Share state and hook into flow lifecycle
++- Inject configuration and integrate with DI containers
++- Validate type compatibility and capture errors
++
++Jump to the chapters above to dive into each capability in detail.
+diff --git a/doc/meta-model.puml b/docs/meta-model.puml
+similarity index 100%
+rename from doc/meta-model.puml
+rename to docs/meta-model.puml
+diff --git a/docs/state.md b/docs/state.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..db453835eaec6e77782826fc3aca1c58cc328f35
+--- /dev/null
++++ b/docs/state.md
+@@ -0,0 +1,40 @@
++# State & Lifecycle
++
++The execution context can hold variables that survive between steps. Mark a field with `@State` and Steppy injects a typed `Variable` that reads and writes the value.
++
++```java
++class StateStep implements Step<None, Integer, Integer> {
++    @State
++    Variable<Integer> counter;
++
++    @Override
++    public Integer invoke(Context<None> ctx, Integer input) {
++        Integer current = counter.get(ctx);
++        counter.set(ctx, current == null ? input : current + input);
++        return input;
++    }
++}
++```
++
++Variables are by default scoped to the declaring step. Setting `@State(scope = Scope.FLOW)` shares the variable across all steps in the flow. Marking a variable as `readOnly` makes it immutable.
++
++## Lifecycle hooks
++
++Use `@Before` and `@After` on methods to run code at specific times. Hooks may target `Scope.STEP` or `Scope.FLOW` and are often used for resource management.
++
++```java
++class LifecycleStep implements Step<None, None, None> {
++    @Before(Scope.FLOW)
++    void open(Context<None> ctx) {
++        // allocate resources
++    }
++
++    @After(Scope.FLOW)
++    void close(Context<None> ctx) {
++        // release resources
++    }
++
++    @Override
++    public None invoke(Context<None> ctx, None in) { return None.value(); }
++}
++```
+diff --git a/docs/streaming.md b/docs/streaming.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..59cdd858c4383b18457e520ce16278d5d5b1cdbc
+--- /dev/null
++++ b/docs/streaming.md
+@@ -0,0 +1,34 @@
++# Streaming
++
++Besides processing finite inputs, flows can continuously pull values from a `Source` and forward the results to a `Sink`. This enables long running pipelines for message queues, file processing or real time feeds.
++
++```java
++class AppendAStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "A";
++    }
++}
++
++class AppendBStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "B";
++    }
++}
++
++StaticStepRepository.register(AppendAStep.class, AppendBStep.class);
++
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .append(AppendBStep.class)
++    .build();
++
++var source = new SimpleSource<>(Stream.of("", "C"));
++var sink = new SimpleSink<String>();
++flow.stream(source, sink);
++// sink.getResult() == ["AB", "CAB"]
++```
++
++The flow keeps requesting values until the source is exhausted. Streaming works for sequential and concurrent flows and nested streaming is supported as well.
+diff --git a/docs/style.css b/docs/style.css
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc4ed2a43b7d87953d1daf313c9233dc692c863d
+--- /dev/null
++++ b/docs/style.css
+@@ -0,0 +1,6 @@
++pre {
++  overflow-x: auto;
++  padding: 1rem;
++  background-color: #f8f9fa;
++  border-radius: .25rem;
++}
+diff --git a/doc/style.iuml b/docs/style.iuml
+similarity index 100%
+rename from doc/style.iuml
+rename to docs/style.iuml
+diff --git a/docs/validation.md b/docs/validation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..4dd79b03bdeef6033f6d63b9b0f17e362d44a370
+--- /dev/null
++++ b/docs/validation.md
+@@ -0,0 +1,76 @@
++# Validation & Errors
++
++Steppy validates type compatibility when building flows and captures failures during execution.
++
++## Result types
++
++Flow invocation returns a `Result` indicating success, failure or abort.
++
++```java
++class AppendAStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        return in + "A";
++    }
++}
++
++class FailStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) throws ExecutionException {
++        throw new ExecutionException("Fail");
++    }
++}
++
++StaticStepRepository.register(AppendAStep.class, FailStep.class);
++
++var flow = StaticFlowBuilderFactory
++    .builder(String.class, String.class)
++    .append(AppendAStep.class)
++    .append(FailStep.class)
++    .build();
++
++Result<String> result = flow.invoke("");
++result.getType();                 // FAILED
++result.getException().getMessage(); // "Fail"
++```
++
++## Aborting a flow
++
++```java
++class AbortStep implements Step<None, String, String> {
++    @Override
++    public String invoke(Context<None> ctx, String in) {
++        ctx.abort();
++        return null;
++    }
++}
++```
++
++Calling `abort()` stops the flow and returns a result of type `ABORTED`.
++
++## Type validation
++
++The builder checks that the input and output types of all steps line up. Mismatches throw a `ValidationException`.
++
++```java
++var builder = StaticFlowBuilderFactory.builder(String.class, Integer.class);
++builder.append(AppendAStep.class).build(); // throws ValidationException
++```
++
++## Generic types
++
++Steps may declare parameterized types. Steppy keeps that information for validation.
++
++```java
++class SumOptional implements Step<Optional<Integer>, Optional<Integer>, Optional<Integer>> {
++    @Override
++    public Optional<Integer> invoke(Context<Optional<Integer>> ctx,
++                                     Optional<Integer> in) {
++        return Optional.of(in.orElse(0) + ctx.getConfiguration().orElse(0));
++    }
++}
++
++var flow = StaticFlowBuilderFactory.builder(Optional.class, Optional.class)
++    .append(SumOptional.class).build();
++flow.invoke(Configurations.of(Optional.of(1)), Optional.of(2)).getResult(); // Optional[3]
++```
+diff --git a/mkdocs.yml b/mkdocs.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..677c03c8c9b18189238b1167647acb2987807456
+--- /dev/null
++++ b/mkdocs.yml
+@@ -0,0 +1,16 @@
++site_name: Steppy
++docs_dir: docs
++site_dir: site
++nav:
++  - Home: index.md
++  - Concepts: concepts.md
++  - Getting started: getting-started.md
++  - Flows: flows.md
++  - Branching & Nesting: branching.md
++  - Streaming: streaming.md
++  - State & Lifecycle: state.md
++  - Configuration: configuration.md
++  - Dependency injection: dependency-injection.md
++  - Validation & Errors: validation.md
++theme:
++  name: material
+
