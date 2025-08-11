@@ -16,19 +16,39 @@ nav:
   - Dependency injection: dependency-injection.md
   - Validation & Errors: validation.md
 
-# Theme configuration
+# Theme configuration - using a more standard setup
 theme:
   name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
   features:
     - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.top
     - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+  font:
+    text: Roboto
+    code: Roboto Mono
 
 # Repository information
 repo_name: steppy
 repo_url: https://github.com/habecker/steppy
+edit_uri: edit/main/docs/
 
 # Markdown extensions
 markdown_extensions:
@@ -48,7 +68,18 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed
   - pymdownx.tasklist
+  - toc:
+      permalink: true
 
 # Plugins
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+# Extra CSS and JS
+extra_css:
+  - style.css
+
+# Site URL for GitHub Pages
+site_url: https://habecker.github.io/steppy/
