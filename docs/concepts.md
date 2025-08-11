@@ -99,7 +99,9 @@ flow.invoke(config, input);
 
 ### State Management
 
-Steppy provides flexible state management with different scopes:
+Steppy provides flexible state management with different scopes and patterns:
+
+#### Local State Variables
 
 - **STEP scope**: State is isolated to individual step executions (not shared between steps)
 - **FLOW scope**: State is shared across all steps in a flow
@@ -128,6 +130,38 @@ public class StatefulStep implements Step<None, Integer, Integer> {
     }
 }
 ```
+
+#### Provider/Consumer Pattern
+
+For dependency injection and data sharing between steps, use the `@Provides` and `@Consumes` annotations:
+
+```java
+// Step that provides data
+public class DataProviderStep implements Step<None, None> {
+    @Provides
+    Variable<UserData> userData;
+    
+    @Override
+    public None invoke(Context<None> context, None input) {
+        userData.set(context, fetchUserData());
+        return None.value();
+    }
+}
+
+// Step that consumes data
+public class DataConsumerStep implements Step<None, String> {
+    @Consumes
+    Variable<UserData> userData;
+    
+    @Override
+    public String invoke(Context<None> context, None input) {
+        UserData data = userData.get(context);
+        return "Hello, " + data.name() + "!";
+    }
+}
+```
+
+This pattern enables clean separation of concerns and automatic validation that all consumed data is provided.
 
 ## Flow Patterns
 
