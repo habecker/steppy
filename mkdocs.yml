@@ -1,6 +1,9 @@
 site_name: Steppy
+site_description: A tiny framework for composing small, type-safe Java steps into robust workflows
 docs_dir: docs
 site_dir: site
+
+# Navigation structure
 nav:
   - Home: index.md
   - Concepts: concepts.md
@@ -12,5 +15,40 @@ nav:
   - Configuration: configuration.md
   - Dependency injection: dependency-injection.md
   - Validation & Errors: validation.md
+
+# Theme configuration
 theme:
   name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+
+# Repository information
+repo_name: steppy
+repo_url: https://github.com/habecker/steppy
+
+# Markdown extensions
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.tasklist
+
+# Plugins
+plugins:
+  - search
