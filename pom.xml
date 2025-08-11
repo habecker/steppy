@@ -14,8 +14,9 @@
     </properties>
 
     <scm>
-        <url>https://git.y2g.de/habecker/steppy.git</url>
-        <connection>scm:git:ssh://git@git.y2g.de/habecker/steppy.git</connection>
+        <url>https://github.com/habecker/steppy.git</url>
+        <connection>scm:git:git://github.com/habecker/steppy.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/habecker/steppy.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
@@ -95,18 +96,21 @@
 
     <repositories>
         <repository>
-            <id>gitea</id>
-            <url>https://git.y2g.de/api/packages/habecker/steppy/maven</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/habecker/steppy</url>
         </repository>
     </repositories>
     <distributionManagement>
         <repository>
-            <id>gitea</id>
-            <url>https://git.y2g.de/api/packages/habecker/maven</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/habecker/steppy</url>
         </repository>
         <snapshotRepository>
-            <id>gitea</id>
-            <url>https://git.y2g.de/api/packages/habecker/maven</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/habecker/steppy</url>
         </snapshotRepository>
     </distributionManagement>
 
