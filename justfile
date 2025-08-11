@@ -5,7 +5,10 @@ report:
     mvn jacoco:report && open target/site/jacoco/index.html
 
 test:
-    mvn clean verify -Dstage=test -Dcheckstyle.skip=true
+    mvn clean verify -Dcheckstyle.skip=true
+
+test-with-coverage:
+    mvn clean verify -Dcheckstyle.skip=true
     mvn jacoco:report
 
 docs-serve:
