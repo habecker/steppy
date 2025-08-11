@@ -1,117 +1,296 @@
 # Concepts
 
-Steppy helps you structure complex workflows into small, testable units called **steps**.  This page introduces the main ideas from the top level down so you can understand how they fit together before diving into the details.
+Steppy helps you structure complex workflows into small, testable units called **steps**. This page introduces the main ideas from the top level down so you can understand how they fit together before diving into the details.
 
-## Workflows
+## Core Concepts
 
-A *workflow* orchestrates a series of steps to reach a business goal.  You describe the workflow using a `Flow` that wires steps together and controls how they execute.
+### Steps
 
-```java
-Flow<String> flow = Flow.sequential(
-    registry.step("ValidateOrder"),
-    registry.step("ChargePayment"),
-    registry.step("SendConfirmation")
-);
-```
+Steps are the fundamental building blocks of Steppy workflows. Each step is a unit of work with a single, well-defined purpose:
 
-`Flow.sequential` runs the steps one after another and passes the result of one step to the next.
-
-## Steps
-
-A step is a small unit of work.  It receives an input and returns a result wrapped in an `Outcome` to signal success or failure.
+- Takes an input and produces an output
+- Can access configuration and state
+- Can be easily tested in isolation
+- Has one main responsibility, even if the implementation is complex
 
 ```java
-public class ValidateOrder implements Step<Order, Order> {
-  @Override
-  public Outcome<Order> run(Order order, StepContext ctx) {
-    if (order.isValid()) {
-      return Outcome.ok(order);
-    }
-    return Outcome.fail("invalid order");
-  }
+@FunctionalInterface
+public interface Step<C, I, R> {
+    R invoke(Context<C> context, I input) throws ExecutionException;
 }
 ```
 
-## Execution modes
+The type parameters represent:
+- `C`: Configuration type (what dependencies the step needs)
+- `I`: Input type (what data the step receives)
+- `R`: Return type (what data the step produces)
 
-Workflows can execute steps in different ways depending on the problem you are solving.
+### Flows
 
-### Sequential and concurrent flows
+Flows orchestrate multiple steps into a complete workflow. They can be:
 
-*Sequential* flows execute one step at a time.  *Concurrent* flows run several steps in parallel and merge their outputs.
+- **Sequential**: Steps execute one after another
+- **Concurrent**: Steps execute in parallel
+- **Branched**: Different paths based on conditions
+- **Nested**: Flows within flows
 
-```java
-Flow<String> concurrent = Flow.concurrent(
-    registry.step("AppendA"),
-    registry.step("AppendB")
-);
-```
-
-### Branching and nesting
-
-You can branch based on runtime data and even embed flows inside other flows.
+Flows provide a fluent builder API for composing steps:
 
 ```java
-Flow<String> branched = Flow.branch(
-    ctx -> ctx.get("shouldAppendB"),
-    registry.step("AppendB"),
-    registry.step("AppendC")
-);
+var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(AppendAStep.class)
+    .append(AppendBStep.class)
+    .build();
 ```
+
+### Context
+
+The `Context` object provides each step with:
+
+- **Configuration**: Information and dependencies the step needs
+- **State**: Data that can be isolated or shared depending on scope
+- **Execution control**: Ability to abort the flow
+- **Scope management**: Different levels of state isolation
+
+```java
+public class MyStep implements Step<PaymentService, Order, Order> {
+    @State
+    Variable<Integer> counter;
+    
+    @Override
+    public Order invoke(Context<PaymentService> context, Order order) {
+        // Access configuration
+        PaymentService service = context.getConfiguration();
+        
+        // Access state
+        Integer current = counter.get(context);
+        
+        // Set state
+        counter.set(context, current + 1);
+        
+        return order;
+    }
+}
+```
+
+### Configurations
+
+Configurations provide information and dependencies that steps need at runtime. They can contain:
+
+- Configuration parameters (URLs, timeouts, thresholds, etc.)
+- Service objects (databases, external APIs, etc.)
+- Shared resources and data
+- Environment-specific settings
+
+```java
+var config = Configurations.of(
+    new PaymentService(),
+    new DatabaseConnection(),
+    new EmailService(),
+    new ApiConfiguration("https://api.example.com", 5000),
+    new ThresholdConfig(1000, 500)
+);
+
+flow.invoke(config, input);
+```
+
+**Note**: This is different from CDI (Contexts and Dependency Injection). Steppy's configuration system is for providing runtime information and dependencies, while CDI is a separate dependency injection framework that can be used alongside Steppy. Steps can be CDI beans when properly configured.
+
+### State Management
+
+Steppy provides flexible state management with different scopes:
+
+- **STEP scope**: State is isolated to individual step executions (not shared between steps)
+- **FLOW scope**: State is shared across all steps in a flow
+
+```java
+public class StatefulStep implements Step<None, Integer, Integer> {
+    @State(scope = Scope.STEP)
+    Variable<Integer> stepCounter;
+    
+    @State(scope = Scope.FLOW)
+    Variable<Integer> flowCounter;
+    
+    @Override
+    public Integer invoke(Context<None> context, Integer input) {
+        // Step-scoped state is isolated per step execution
+        // Each step gets its own instance of this variable
+        Integer stepCount = stepCounter.get(context);
+        stepCounter.set(context, (stepCount == null ? 0 : stepCount) + 1);
+        
+        // Flow-scoped state is shared across all steps
+        // All steps in the flow can access and modify this variable
+        Integer flowCount = flowCounter.get(context);
+        flowCounter.set(context, (flowCount == null ? 0 : flowCount) + 1);
+        
+        return input;
+    }
+}
+```
+
+## Flow Patterns
+
+### Sequential Flows
+
+The simplest pattern where steps execute one after another:
+
+```java
+var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(ValidateStep.class)
+    .append(ProcessStep.class)
+    .append(NotifyStep.class)
+    .build();
+```
+
+### Concurrent Flows
+
+Steps execute in parallel for better performance:
+
+```java
+var flow = StaticFlowBuilderFactory
+    .builder(String.class, String.class)
+    .append(ValidateStep.class)
+    .append(ProcessStep.class)
+    .append(NotifyStep.class)
+    .concurrent()
+    .build();
+```
+
+### Branched Flows
+
+Conditional execution paths based on input data:
+
+```java
+var flow = StaticFlowBuilderFactory
+    .builder(Order.class, Order.class)
+    .branch(Order.class, Order.class, builder -> 
+        builder.when(order -> order.amount() > 1000, 
+            b -> b.append(HighValueProcessStep.class))
+        .when(order -> order.amount() > 100, 
+            b -> b.append(MediumValueProcessStep.class))
+        .otherwise(b -> b.append(StandardProcessStep.class))
+    )
+    .build();
+```
+
+### Nested Flows
+
+Flows can contain other flows for complex orchestration:
+
+```java
+var flow = StaticFlowBuilderFactory
+    .builder(Order.class, Order.class)
+    .append(ValidateStep.class)
+    .nest(Order.class, nestedBuilder -> 
+        nestedBuilder
+            .append(ProcessPaymentStep.class)
+            .append(SendConfirmationStep.class)
+    )
+    .append(LogStep.class)
+    .build();
+```
+
+## Advanced Features
 
 ### Streaming
 
-For large or unbounded data sets, Steppy streams items through a source, optional processors, and a sink.
+For processing large datasets or continuous data streams:
 
 ```java
-Flow.stream(
-    registry.step("ReadLines"),
-    List.of(registry.step("Filter")),
-    registry.step("Persist")
-);
+// Define source and sink
+var source = new SimpleSource<>(dataStream);
+var sink = new SimpleSink<Result>();
+
+// Stream processing
+flow.stream(source, sink);
 ```
 
-## State and lifecycle
+### Lifecycle Hooks
 
-Each step can store temporary state in a `StepContext` and react to lifecycle hooks such as `before` and `after`.
+Steps can define lifecycle methods using annotations:
 
 ```java
-public class AuditStep implements Step<String, String> {
-  @Override
-  public void before(StepContext ctx) {
-    ctx.put("start", Instant.now());
-  }
+public class LifecycleStep implements Step<None, String, String> {
+    @Before(Scope.STEP)
+    public void beforeStep() {
+        // Called before step execution
+    }
+    
+    @After(Scope.STEP)
+    public void afterStep() {
+        // Called after step execution
+    }
+    
+    @Override
+    public String invoke(Context<None> context, String input) {
+        return input + " processed";
+    }
 }
 ```
 
-## Integration
+### Error Handling
 
-### Configuration
+Steppy provides comprehensive error handling:
 
-Steps can read configuration values from the `StepContext` or an injected configuration object.
-
-```java
-String url = ctx.config("payment.url");
-```
-
-### Dependency injection
-
-Steppy integrates with DI containers.  Register the step class and the framework resolves its dependencies when the flow runs.
+- **ExecutionException**: Business logic errors
+- **ValidationException**: Flow configuration errors
+- **Result types**: SUCCESS, FAILED, ABORTED
 
 ```java
-registry.register("ChargePayment", new ChargePayment(service));
-```
-
-## Validation and errors
-
-Outcomes can fail.  You can abort a flow early or handle failures explicitly.
-
-```java
-Outcome<String> result = flow.run("start");
-if (result.isFail()) {
-  // handle error
+var result = flow.invoke(input);
+switch (result.getType()) {
+    case SUCCESS:
+        // Handle successful execution
+        break;
+    case FAILED:
+        // Handle failure
+        Exception error = result.getException();
+        break;
+    case ABORTED:
+        // Handle manual abort
+        break;
 }
 ```
 
-With these concepts in mind, explore the other chapters for deeper explanations and full examples.
+### Validation
 
+Steppy validates flows at build time to catch configuration errors early:
+
+- Type compatibility between steps
+- State variable declarations
+- Branch condition completeness
+
+## Integration Patterns
+
+### Dependency Injection Integration
+
+Steppy can integrate with popular DI frameworks for step creation and management:
+
+- **CDI**: `CdiFlowBuilderFactory` and `CdiStepRepository` - Steps can be CDI beans
+- **Spring**: `SpringFlowBuilderFactory` and `SpringStepRepository` - Steps can be Spring beans
+- **POJO**: `StaticFlowBuilderFactory` and `StaticStepRepository` - Simple POJO-based approach
+
+When using CDI or Spring, steps can leverage the full power of their respective DI frameworks (constructor injection, lifecycle management, etc.) while still using Steppy's configuration system for runtime dependencies.
+
+### Testing
+
+Steps are designed to be easily testable:
+
+```java
+@Test
+void testStep() throws ExecutionException {
+    var step = new MyStep();
+    var context = new Context<>(Configurations.empty(), None.class);
+    var result = step.invoke(context, "test input");
+    
+    assertThat(result).isEqualTo("expected output");
+}
+```
+
+
+
+## Summary
+
+Steppy provides a powerful yet simple framework for building complex workflows. By breaking down workflows into focused, testable steps and providing flexible orchestration patterns, it helps you create maintainable and scalable business logic.
