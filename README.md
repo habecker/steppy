@@ -35,32 +35,42 @@
 
 ```java
 import de.y2g.steppy.api.*;
+import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
+import de.y2g.steppy.pojo.StaticStepRepository;
+import java.util.concurrent.Executors;
 
 // Define your steps
-public class StringLengthStep implements Step<String, Integer> {
+public class StringLengthStep implements Step<None, String, Integer> {
     @Override
-    public Integer invoke(String input) {
+    public Integer invoke(Context<None> context, String input) {
         return input.length();
     }
 }
 
+// Register steps and initialize
+StaticStepRepository.register(StringLengthStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
 // Build and execute a flow
-FlowBuilder builder = FlowBuilderFactory.create();
-Flow flow = builder
-    .add(new StringLengthStep())
+var flow = StaticFlowBuilderFactory
+    .builder(String.class, Integer.class)
+    .append(StringLengthStep.class)
     .build();
 
-Integer result = flow.invoke("Hello, Steppy!");
-// result = 14
+Result<Integer> result = flow.invoke("Hello, Steppy!");
+// result.getResult() = 14
 ```
 
 ### State Management Example
 
 ```java
 import de.y2g.steppy.api.*;
+import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
+import de.y2g.steppy.pojo.StaticStepRepository;
+import java.util.concurrent.Executors;
 
 // Step that provides data
-public class DataProviderStep implements Step<None, None> {
+public class DataProviderStep implements Step<None, None, None> {
     @Provides
     Variable<UserData> userData;
     
@@ -72,7 +82,7 @@ public class DataProviderStep implements Step<None, None> {
 }
 
 // Step that consumes data
-public class DataConsumerStep implements Step<None, String> {
+public class DataConsumerStep implements Step<None, None, String> {
     @Consumes
     Variable<UserData> userData;
     
@@ -83,27 +93,42 @@ public class DataConsumerStep implements Step<None, String> {
     }
 }
 
+// Register steps and initialize
+StaticStepRepository.register(DataProviderStep.class, DataConsumerStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
 // Build flow with state sharing
-Flow flow = builder
-    .add(new DataProviderStep())
-    .add(new DataConsumerStep())
+var flow = StaticFlowBuilderFactory
+    .builder(None.class, String.class)
+    .append(DataProviderStep.class)
+    .append(DataConsumerStep.class)
     .build();
 
-String result = flow.invoke();
-// result = "Hello, John!"
+Result<String> result = flow.invoke();
+// result.getResult() = "Hello, John!"
 ```
 
 ### Concurrent Execution
 
 ```java
-Flow flow = builder
-    .add(new FetchUserDataStep())
-    .add(new FetchOrderDataStep())
+import de.y2g.steppy.api.*;
+import de.y2g.steppy.pojo.StaticFlowBuilderFactory;
+import de.y2g.steppy.pojo.StaticStepRepository;
+import java.util.concurrent.Executors;
+
+// Register steps and initialize
+StaticStepRepository.register(FetchUserDataStep.class, FetchOrderDataStep.class, ProcessCombinedDataStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
+var flow = StaticFlowBuilderFactory
+    .builder(UserId.class, CombinedData.class)
+    .append(FetchUserDataStep.class)
+    .append(FetchOrderDataStep.class)
     .concurrent()
-    .add(new ProcessCombinedDataStep())
+    .append(ProcessCombinedDataStep.class)
     .build();
 
-Result result = flow.invoke(userId);
+Result<CombinedData> result = flow.invoke(userId);
 ```
 
 ## 📚 Documentation

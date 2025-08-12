@@ -137,7 +137,7 @@ For dependency injection and data sharing between steps, use the `@Provides` and
 
 ```java
 // Step that provides data
-public class DataProviderStep implements Step<None, None> {
+public class DataProviderStep implements Step<None, None, None> {
     @Provides
     Variable<UserData> userData;
     
@@ -149,7 +149,7 @@ public class DataProviderStep implements Step<None, None> {
 }
 
 // Step that consumes data
-public class DataConsumerStep implements Step<None, String> {
+public class DataConsumerStep implements Step<None, None, String> {
     @Consumes
     Variable<UserData> userData;
     

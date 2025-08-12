@@ -31,7 +31,7 @@ The `@Provides` and `@Consumes` annotations enable a powerful dependency injecti
 Use `@Provides` on a `Variable<T>` field to indicate that a step provides data of type `T`:
 
 ```java
-class UserDataProviderStep implements Step<None, None> {
+class UserDataProviderStep implements Step<None, None, None> {
     @Provides
     Variable<UserData> userData;
     
@@ -50,7 +50,7 @@ class UserDataProviderStep implements Step<None, None> {
 Use `@Consumes` on a `Variable<T>` field to indicate that a step requires data of type `T`:
 
 ```java
-class UserDataConsumerStep implements Step<None, String> {
+class UserDataConsumerStep implements Step<None, None, String> {
     @Consumes
     Variable<UserData> userData;
     
@@ -67,12 +67,17 @@ class UserDataConsumerStep implements Step<None, String> {
 When building flows, Steppy automatically validates that all consumed data is provided by some step in the flow:
 
 ```java
-Flow flow = builder
-    .add(new UserDataProviderStep())  // Provides UserData
-    .add(new UserDataConsumerStep())  // Consumes UserData
+// Register steps and initialize
+StaticStepRepository.register(UserDataProviderStep.class, UserDataConsumerStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
+var flow = StaticFlowBuilderFactory
+    .builder(None.class, String.class)
+    .append(UserDataProviderStep.class)  // Provides UserData
+    .append(UserDataConsumerStep.class)  // Consumes UserData
     .build();
 
-String result = flow.invoke();
+Result<String> result = flow.invoke();
 ```
 
 ### Validation
@@ -81,8 +86,12 @@ Steppy performs validation to ensure that all consumed data is provided. If a st
 
 ```java
 // This will throw ValidationException
-Flow invalidFlow = builder
-    .add(new UserDataConsumerStep())  // Consumes UserData but no provider
+StaticStepRepository.register(UserDataConsumerStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
+var invalidFlow = StaticFlowBuilderFactory
+    .builder(None.class, String.class)
+    .append(UserDataConsumerStep.class)  // Consumes UserData but no provider
     .build();
 ```
 
@@ -91,10 +100,14 @@ Flow invalidFlow = builder
 The provider/consumer pattern works seamlessly with nested flows. Data provided in a parent flow is available to all nested flows:
 
 ```java
-Flow flow = builder
-    .add(new UserDataProviderStep())
+StaticStepRepository.register(UserDataProviderStep.class, UserDataConsumerStep.class);
+StaticFlowBuilderFactory.initialize(Executors.newFixedThreadPool(4));
+
+var flow = StaticFlowBuilderFactory
+    .builder(None.class, String.class)
+    .append(UserDataProviderStep.class)
     .nest(None.class, nestedBuilder -> {
-        nestedBuilder.add(new UserDataConsumerStep());
+        nestedBuilder.append(UserDataConsumerStep.class);
     })
     .build();
 ```
